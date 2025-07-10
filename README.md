@@ -1,197 +1,94 @@
-# **Cadastro de Pacientes e Exames Médicos com Modalidades DICOM**
+📝 **Task: Cadastro de Pacientes e Exames Médicos com Modalidades DICOM**
 
----
+🎯 **Descrição**
 
-## 🧩 História do Usuário
+Como usuário da plataforma médica,  
+Quero registrar e consultar pacientes e seus exames de forma segura, consistente e com boa experiência de navegação,  
+Para que eu tenha controle sobre o histórico clínico mesmo em situações de reenvio de requisição ou acessos simultâneos.
 
-**Título:**  
-Como usuário da plataforma médica, desejo registrar e consultar pacientes e seus exames de forma segura, consistente e com boa experiência de navegação, para que eu tenha controle sobre o histórico clínico mesmo em situações de reenvio de requisição ou acessos simultâneos.
+⸻
 
----
+🔧 **Escopo da Task**
 
-## 🧾 Descrição Técnica – Cadastro de Pacientes e Exames
+- Implementar endpoints REST para cadastro e consulta de pacientes e exames.
+- Garantir idempotência no cadastro de exames.
+- Criar estrutura segura para suportar requisições concorrentes.
+- Implementar paginação para consultas.
+- Integrar com front-end Angular.
+- Criar componentes Angular para cadastro e listagem de pacientes e exames.
+- Utilizar práticas RESTful, transações ACID e código modular.
 
-Durante a modernização da plataforma, será desenvolvida uma funcionalidade com foco em:
+⸻
 
-- Registro de **Pacientes**
-- Registro de **Exames**, vinculando-os a um paciente já existente
-- Garantia de **idempotência** no cadastro de exames
-- Concorrência segura para múltiplas requisições simultâneas
-- Consulta eficiente de exames com paginação
-- Integração com frontend em Angular
-- Arquitetura orientada a boas práticas REST, transações ACID e escalabilidade
+✅ **Regras de Validações**
 
----
+- O `documento` do paciente deve ser único.
+- A `idempotencyKey` do exame deve garantir que requisições duplicadas não criem múltiplos registros.
+- Não é permitido cadastrar exame para paciente inexistente.
+- Campos obrigatórios devem ser validados (nome, data de nascimento, modalidade, etc).
 
-## 🧬 Entidades Envolvidas
+⸻
 
-### 👤 Paciente
+📦 **Saída Esperada**
 
-- `id`: UUID  
-- `nome`: string  
-- `dataNascimento`: date  
-- `sexo`: string (`M`, `F`, `Outro`)  
-- `documento`: string (CPF ou equivalente, com unicidade)  
+- Endpoints criados:
+  - `POST /pacientes`
+  - `GET /pacientes?page=x&pageSize=y`
+  - `POST /exames`
+  - `GET /exames?page=x&pageSize=y`
+- Dados persistidos de forma segura e idempotente.
+- Front-end com:
+  - Listagem paginada de pacientes e exames.
+  - Cadastro funcional via formulários.
+  - UI amigável com mensagens de erro e loading.
 
-### 🧪 Exame
+⸻
 
-- `id`: UUID  
-- `pacienteId`: UUID  
-- `dataRealizacao`: date  
-- `modalidade`: enum (CR, CT, DX, MG, MR, NM, OT, PT, RF, US, XA, etc.)  
-- `conclusao`: string  
-- `idempotencyKey`: string (chave única por requisição)  
+🔥 **Critérios de Aceite**
 
----
+- **Dado** que um paciente válido foi cadastrado,  
+  **Quando** for enviado um novo exame com `idempotencyKey` única,  
+  **Então** o exame deverá ser criado com sucesso.
 
-## ✅ Critérios de Aceite Funcionais
+- **Dado** que um exame com `idempotencyKey` já existe,  
+  **Quando** for enviada uma nova requisição com os mesmos dados,  
+  **Então** o sistema deverá retornar HTTP 200 com o mesmo exame, sem recriá-lo.
 
-### 🔧 Back-end
+- **Dado** que múltiplas requisições simultâneas com mesma `idempotencyKey` são feitas,  
+  **Quando** processadas,  
+  **Então** apenas um exame deverá ser persistido.
 
-#### **POST /exames**
+- **Dado** que o front-end está carregando dados,  
+  **Quando** houver erro de rede,  
+  **Então** deve ser exibida mensagem de erro com botão "Tentar novamente".
 
-- Aceitar payload com:
-  - `idempotencyKey`
-  - `pacienteId` (UUID)
-  - `dataRealizacao` (Date)
-  - `modalidade` (Enum: CR, CT, MR, etc.)
-  - `conclusao` (Texto)
+⸻
 
-- Persistir o exame de forma transacional  
-- Garantir que o exame **não seja recriado** com a mesma `idempotencyKey`  
-- Retornar:
-  - HTTP **201** em caso de criação
-  - HTTP **200** com exame existente em caso de repetição
+👥 **Dependências**
 
----
+- Banco de dados com suporte a transações (PostgreSQL, MySQL ou similar).
+- Integração REST entre backend (Node.js/NestJS ou similar) e frontend (Angular).
+- Validação de campos no front-end e back-end.
+- Definição do enum de modalidades DICOM:
+  - `CR, CT, DX, MG, MR, NM, OT, PT, RF, US, XA`
 
-#### **GET /exames**
+⸻
 
-- Suporte a paginação: `?page=x&pageSize=y`  
-- Retornar exames com dados agregados do paciente
+🧪 **Cenários de Teste**
 
----
+| Cenário | Descrição | Resultado Esperado |
+|--------|-----------|--------------------|
+| 1 | Criar paciente com dados válidos | Paciente salvo com UUID único |
+| 2 | Criar paciente com CPF já existente | Erro de validação 409 - duplicidade |
+| 3 | Criar exame com paciente existente e idempotencyKey nova | HTTP 201 e exame salvo |
+| 4 | Reenviar exame com mesma idempotencyKey | HTTP 200 e retorno do mesmo exame |
+| 5 | Enviar múltiplas requisições simultâneas com mesma idempotencyKey | Apenas um exame persistido |
+| 6 | Criar exame com paciente inexistente | Erro 400 - paciente não encontrado |
+| 7 | Listar exames com paginação (10 por página) | Retorno paginado corretamente |
+| 8 | Listar pacientes com paginação | Lista retornada corretamente |
+| 9 | Frontend mostra loading durante chamada | Spinner visível enquanto carrega |
+| 10 | Frontend exibe erro de rede e botão “Tentar novamente” | Mensagem visível e reenvio possível |
+| 11 | Enviar exame com modalidade inválida | Erro 400 - enum inválido |
+| 12 | Validação visual dos campos obrigatórios no formulário | Campos com feedback de erro |
+| 13 | Cobertura mínima de 80% nos testes unitários e integração | Relatório de cobertura válido |
 
-#### **GET /pacientes**
-
-- Listar pacientes cadastrados com paginação
-
----
-
-#### **POST /pacientes**
-
-- Criar novo paciente  
-- Validação de documento único
-
----
-
-### 🖥️ Front-end
-
-#### **PacienteListComponent**
-
-- Lista pacientes com paginação  
-- Permite cadastrar novo paciente  
-- Exibe loading, erro e botão “Tentar novamente”
-
----
-
-#### **ExameListComponent**
-
-- Lista exames com paginação  
-- Mostra nome do paciente no resultado  
-- Permite criar novo exame via modal/form
-
----
-
-#### **ExameFormComponent**
-
-- Formulário para novo exame  
-- Campo de seleção de paciente (dropdown/autocomplete)  
-- Campos: data, modalidade, conclusão  
-- Envio com `idempotencyKey`
-
----
-
-## 📋 Modalidades DICOM (enum para modalidade)
-
-Valores válidos:
-
-CR, CT, DX, MG, MR, NM, OT, PT, RF, US, XA
-
----
-
-## 🛠️ Critérios Técnicos
-
-### Arquitetura e Organização
-
-- Separação clara entre `controller`, `service`, `repository`  
-- Uso de DTOs para entrada e saída  
-- RESTful e semântica nas rotas  
-
----
-
-### Banco de Dados e Concorrência
-
-- Transações ACID  
-- Segurança para requisições simultâneas  
-- Controle de idempotência:
-  - Tabela com `idempotencyKey` ou
-  - Índice exclusivo  
-- Retorno apropriado para chave duplicada
-
----
-
-### Escalabilidade e Justificativas
-
-- Código modular e escalável  
-- Justificativas arquiteturais claras (README ou comentários)
-
----
-
-## 🎯 Experiência do Usuário (Frontend)
-
-- UI amigável, responsiva  
-- Componentes reutilizáveis  
-- Angular organizado em módulos  
-- Uso de RxJS, `async pipe`, interceptadores
-
----
-
-## 🧪 Cenário de Testes
-
-### Testes de Idempotência
-
-- Enviar o mesmo exame com mesma `idempotencyKey` → **não duplicar**, mesmo retorno
-
-### Testes de Concorrência
-
-- Enviar múltiplas requisições simultâneas com mesma `idempotencyKey` → **um único exame persistido**
-
-### Testes Funcionais
-
-- Criar paciente e exame válidos  
-- Criar exame com paciente inexistente → **erro esperado**  
-- Listar exames paginados  
-
----
-
-### Testes de API
-
-- **201**: exame criado  
-- **200**: exame já existia (idempotência)  
-- **400**: payload inválido  
-- **409**: duplicidade (se não tratada corretamente)  
-
----
-
-### Testes Front-end
-
-- Exibir loading ao carregar dados  
-- Exibir erros com opção de reenvio  
-- Validação visual de paginação e dados  
-
----
-
-### Testes de Integração (Bônus)
-
-- Cobertura mínima de **80%** com testes unitários e integração (Node.js e Angular)
