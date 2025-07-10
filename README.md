@@ -92,3 +92,37 @@ Para que eu tenha controle sobre o histórico clínico mesmo em situações de r
 | 12 | Validação visual dos campos obrigatórios no formulário | Campos com feedback de erro |
 | 13 | Cobertura mínima de 80% nos testes unitários e integração | Relatório de cobertura válido |
 
+⸻
+
+🧪 **Testes de Integração (Requisito Obrigatório)**
+
+- Devem ser implementados utilizando ferramentas como:
+  - `Supertest` ou `jest` com `NestJS TestingModule` (backend)
+  - `TestBed`, `HttpClientTestingModule` (frontend Angular)
+- Devem cobrir pelo menos:
+  - Fluxo de criação completo (Paciente → Exame)
+  - Validações de regra de negócio
+  - Idempotência em requisições simultâneas
+  - Respostas corretas de erro
+  - Listagem paginada
+
+⸻
+
+✨ **Bônus para Diferenciação Técnica**
+
+Os itens a seguir não são obrigatórios, mas serão **altamente valorizados**:
+
+- 🐳 **Uso de Docker** para orquestração local:
+  - Arquivo `docker-compose.yml` com banco e backend
+  - Script de inicialização da aplicação
+- 📜 **Integração com Swagger / OpenAPI**:
+  - Documentação dos endpoints RESTful
+  - Disponível via `/api/docs` ou equivalente
+- ⚙️ **Pipeline CI Básico com GitHub Actions**:
+  - Rodar testes automatizados
+  - Validar lint ou build
+- 📚 **Documentação Técnica**:
+  - `README.md` com instruções para rodar o projeto localmente
+  - Scripts de setup e uso da API
+  - Seções com decisões de arquitetura
+
