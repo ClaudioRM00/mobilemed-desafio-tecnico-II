@@ -23,6 +23,7 @@ export class PacienteForm implements OnInit, OnDestroy {
   error: string | null = null;
   isEditMode = false;
   pacienteId: string | null = null;
+  formSubmitted = false;
 
   constructor(
     private fb: FormBuilder,
@@ -37,7 +38,8 @@ export class PacienteForm implements OnInit, OnDestroy {
       telefone: ['', [Validators.required]],
       data_nascimento: ['', [Validators.required]],
       sexo: ['', [Validators.required]],
-      endereco: ['', [Validators.required]]
+      endereco: ['', [Validators.required]],
+      status: ['Ativo', [Validators.required]]
     });
   }
 
@@ -85,7 +87,8 @@ export class PacienteForm implements OnInit, OnDestroy {
             telefone: paciente.telefone,
             data_nascimento: dataNascimento,
             sexo: paciente.sexo,
-            endereco: paciente.endereco
+            endereco: paciente.endereco,
+            status: paciente.status
           });
           this.loading = false;
         },
@@ -97,6 +100,8 @@ export class PacienteForm implements OnInit, OnDestroy {
   }
 
   onSubmit() {
+    this.formSubmitted = true;
+    
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

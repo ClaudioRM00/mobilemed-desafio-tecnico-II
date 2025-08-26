@@ -80,7 +80,7 @@
               placeholder="Digite o nome do exame"
             />
             <div
-              *ngIf="form.get('nome_exame')?.invalid && form.get('nome_exame')?.touched"
+              *ngIf="form.get('nome_exame')?.invalid && formSubmitted"
               class="mt-1 text-sm text-danger-600"
             >
               <span *ngIf="form.get('nome_exame')?.errors?.['required']">Nome do exame é obrigatório</span>
@@ -96,32 +96,99 @@
             <select formControlName="modalidade" class="input-field">
               <option value="">Selecione uma modalidade</option>
               <option *ngFor="let modalidade of modalidades" [value]="modalidade">
-                {{ getModalidadeLabel(modalidade) }}
+                {{ getModalidadeLabel(modalidade) }} ({{ modalidade }})
               </option>
             </select>
             <div
-              *ngIf="form.get('modalidade')?.invalid && form.get('modalidade')?.touched"
+              *ngIf="form.get('modalidade')?.invalid && formSubmitted"
               class="mt-1 text-sm text-danger-600"
             >
-              Modalidade é obrigatória
+              <span *ngIf="form.get('modalidade')?.errors?.['required']">Modalidade é obrigatória</span>
             </div>
           </div>
 
-          <div>
+          <div class="relative paciente-search-container">
             <label class="block text-sm font-medium text-medical-700 mb-2">
-              ID do Paciente *
+              Paciente *
             </label>
-            <input
-              type="text"
-              formControlName="id_paciente"
-              class="input-field"
-              placeholder="Digite o ID do paciente"
-            />
+            <div class="relative">
+              <input
+                type="text"
+                formControlName="pacienteSearch"
+                (input)="onPacienteSearch($event)"
+                class="input-field pr-10"
+                placeholder="Digite o nome do paciente para buscar..."
+              />
+              <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                <svg
+                  *ngIf="pacientesLoading"
+                  class="animate-spin h-5 w-5 text-medical-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                <svg
+                  *ngIf="!pacientesLoading"
+                  class="h-5 w-5 text-medical-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                  />
+                </svg>
+              </div>
+            </div>
+            
+            <!-- Dropdown de pacientes -->
             <div
-              *ngIf="form.get('id_paciente')?.invalid && form.get('id_paciente')?.touched"
+              *ngIf="showPacientesDropdown && pacientes.length > 0"
+              class="absolute z-10 w-full mt-1 bg-white border border-medical-200 rounded-lg shadow-lg max-h-60 overflow-auto"
+            >
+              <div
+                *ngFor="let paciente of pacientes"
+                (click)="selectPaciente(paciente)"
+                class="px-4 py-3 hover:bg-medical-50 cursor-pointer border-b border-medical-100 last:border-b-0"
+              >
+                <div class="flex justify-between items-center">
+                  <div>
+                    <div class="font-medium text-medical-900">{{ paciente.nome }}</div>
+                    <div class="text-sm text-medical-500">CPF: {{ paciente.documento_cpf }}</div>
+                  </div>
+                  <div class="text-xs">
+                    <span
+                      [class]="paciente.status === 'Ativo' ? 'text-green-600' : 'text-red-600'"
+                      class="px-2 py-1 rounded-full bg-medical-100"
+                    >
+                      {{ paciente.status }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div
+              *ngIf="form.get('id_paciente')?.invalid && formSubmitted"
               class="mt-1 text-sm text-danger-600"
             >
-              ID do paciente é obrigatório
+              <span *ngIf="form.get('id_paciente')?.errors?.['required']">Paciente é obrigatório</span>
             </div>
           </div>
 
@@ -135,10 +202,10 @@
               class="input-field"
             />
             <div
-              *ngIf="form.get('data_exame')?.invalid && form.get('data_exame')?.touched"
+              *ngIf="form.get('data_exame')?.invalid && formSubmitted"
               class="mt-1 text-sm text-danger-600"
             >
-              Data do exame é obrigatória
+              <span *ngIf="form.get('data_exame')?.errors?.['required']">Data do exame é obrigatória</span>
             </div>
           </div>
         </div>
@@ -167,7 +234,7 @@
             </button>
           </div>
           <div
-            *ngIf="form.get('idempotencyKey')?.invalid && form.get('idempotencyKey')?.touched"
+            *ngIf="form.get('idempotencyKey')?.invalid && formSubmitted"
             class="mt-1 text-sm text-danger-600"
           >
             <span *ngIf="form.get('idempotencyKey')?.errors?.['required']">Chave de idempotência é obrigatória</span>
@@ -180,28 +247,58 @@
         </div>
       </div>
 
-      <!-- Error Message -->
-      <div
-        *ngIf="error"
-        class="bg-danger-50 border border-danger-200 rounded-lg p-4"
-      >
-        <div class="flex items-center gap-3">
-          <svg
-            class="w-5 h-5 text-danger-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
-            />
-          </svg>
-          <p class="text-sm text-danger-800">{{ error }}</p>
-        </div>
-      </div>
+             <!-- Validation Error Message -->
+       <div
+         *ngIf="formSubmitted && form.invalid"
+         class="bg-danger-50 border border-danger-200 rounded-lg p-4"
+       >
+         <div class="flex items-center gap-3">
+           <svg
+             class="w-5 h-5 text-danger-500"
+             fill="none"
+             viewBox="0 0 24 24"
+             stroke-width="1.5"
+             stroke="currentColor"
+           >
+             <path
+               stroke-linecap="round"
+               stroke-linejoin="round"
+               d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+             />
+           </svg>
+           <div>
+             <h3 class="text-sm font-medium text-danger-800">
+               Não foi possível realizar o cadastro
+             </h3>
+             <p class="text-sm text-danger-700 mt-1">
+               Por favor, preencha todos os campos obrigatórios marcados com *.
+             </p>
+           </div>
+         </div>
+       </div>
+
+       <!-- Error Message -->
+       <div
+         *ngIf="error"
+         class="bg-danger-50 border border-danger-200 rounded-lg p-4"
+       >
+         <div class="flex items-center gap-3">
+           <svg
+             class="w-5 h-5 text-danger-500"
+             fill="none"
+             viewBox="0 0 24 24"
+             stroke-width="1.5"
+             stroke="currentColor"
+           >
+             <path
+               stroke-linecap="round"
+               stroke-linejoin="round"
+               d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+             />
+           </svg>
+           <p class="text-sm text-danger-800">{{ error }}</p>
+         </div>
+       </div>
 
       <!-- Form Actions -->
       <div class="flex items-center justify-end space-x-3 pt-6 border-t border-medical-200">
@@ -213,7 +310,7 @@
         </a>
         <button
           type="submit"
-          [disabled]="form.invalid || submitting"
+          [disabled]="submitting"
           class="btn-primary"
         >
           <svg

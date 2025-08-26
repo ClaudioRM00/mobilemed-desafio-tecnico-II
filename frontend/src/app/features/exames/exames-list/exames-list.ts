@@ -4,6 +4,8 @@ import { RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ExamesService, ExameDto, PaginatedResponse } from '../../../services/exames';
+import { PacientesService, PacienteDto } from '../../../services/pacientes';
+import { getModalidadeLabel } from '../../../shared/utils/modalidade.utils';
 
 @Component({
   selector: 'app-exames-list',
@@ -21,8 +23,15 @@ export class ExamesList implements OnInit, OnDestroy {
   error: string | null = null;
   currentPage = 1;
   pageSize = 10;
+  
+  // Cache para dados dos pacientes
+  pacientesCache: { [key: string]: PacienteDto } = {};
+  pacientesLoading: { [key: string]: boolean } = {};
 
-  constructor(private examesService: ExamesService) {}
+  constructor(
+    private examesService: ExamesService,
+    private pacientesService: PacientesService
+  ) {}
 
   ngOnInit() {
     this.loadExames();
@@ -43,12 +52,79 @@ export class ExamesList implements OnInit, OnDestroy {
         next: (data: PaginatedResponse<ExameDto>) => {
           this.paginatedData = data;
           this.loading = false;
+          
+          // Limpar cache de pacientes não utilizados na página atual
+          this.cleanPacientesCache();
+          
+          // Carregar dados dos pacientes para os exames
+          this.loadPacientesData();
         },
         error: (error: any) => {
           this.error = error.message || 'Erro ao carregar exames';
           this.loading = false;
         }
       });
+  }
+
+  cleanPacientesCache() {
+    if (!this.paginatedData?.data) return;
+
+    const currentPacienteIds = this.paginatedData.data.map(exame => exame.id_paciente);
+    
+    // Remover do cache pacientes que não estão na página atual
+    Object.keys(this.pacientesCache).forEach(pacienteId => {
+      if (!currentPacienteIds.includes(pacienteId)) {
+        delete this.pacientesCache[pacienteId];
+        delete this.pacientesLoading[pacienteId];
+      }
+    });
+  }
+
+  loadPacientesData() {
+    if (!this.paginatedData?.data) return;
+
+    this.paginatedData.data.forEach(exame => {
+      if (exame.id_paciente && !this.pacientesCache[exame.id_paciente] && !this.pacientesLoading[exame.id_paciente]) {
+        this.loadPaciente(exame.id_paciente);
+      }
+    });
+  }
+
+  loadPaciente(pacienteId: string) {
+    if (this.pacientesLoading[pacienteId]) return;
+
+    this.pacientesLoading[pacienteId] = true;
+
+    this.pacientesService.getById(pacienteId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (paciente: PacienteDto) => {
+          this.pacientesCache[pacienteId] = paciente;
+          this.pacientesLoading[pacienteId] = false;
+        },
+        error: (error: any) => {
+          console.error(`Erro ao carregar paciente ${pacienteId}:`, error);
+          this.pacientesLoading[pacienteId] = false;
+        }
+      });
+  }
+
+  getPacienteNome(pacienteId: string): string {
+    const paciente = this.pacientesCache[pacienteId];
+    if (paciente) {
+      return paciente.nome;
+    }
+    
+    if (this.pacientesLoading[pacienteId]) {
+      return 'Carregando...';
+    }
+    
+    return `ID: ${pacienteId}`;
+  }
+
+  getPacienteStatus(pacienteId: string): string | null {
+    const paciente = this.pacientesCache[pacienteId];
+    return paciente ? paciente.status : null;
   }
 
   previousPage() {
@@ -92,20 +168,7 @@ export class ExamesList implements OnInit, OnDestroy {
   }
 
   getModalidadeLabel(modalidade: string): string {
-    const modalidades: { [key: string]: string } = {
-      'CR': 'Radiografia Computadorizada',
-      'CT': 'Tomografia Computadorizada',
-      'DX': 'Radiografia Digital',
-      'MG': 'Mamografia',
-      'MR': 'Ressonância Magnética',
-      'NM': 'Medicina Nuclear',
-      'OT': 'Outros',
-      'PT': 'Tomografia por Emissão',
-      'RF': 'Fluoroscopia',
-      'US': 'Ultrassonografia',
-      'XA': 'Angiografia'
-    };
-    return modalidades[modalidade] || modalidade;
+    return getModalidadeLabel(modalidade);
   }
 
   getInitials(name: string): string {

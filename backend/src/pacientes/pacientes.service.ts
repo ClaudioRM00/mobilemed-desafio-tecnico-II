@@ -14,15 +14,21 @@ export class PacientesService {
     private pacienteRepo: Repository<Paciente>,
   ) {}
 
-  async findAll(paginationDto: PaginationDto): Promise<PaginatedResponseDto<Paciente>> {
+  async findAll(paginationDto: PaginationDto, search?: string): Promise<PaginatedResponseDto<Paciente>> {
     const { page = 1, pageSize = 10 } = paginationDto;
     const skip = (page - 1) * pageSize;
 
-    const [data, total] = await this.pacienteRepo.findAndCount({
-      skip,
-      take: pageSize,
-      order: { data_cadastro: 'DESC' }, // Ordenar por data de cadastro mais recente
-    });
+    let query = this.pacienteRepo.createQueryBuilder('paciente');
+
+    if (search) {
+      query = query.where('paciente.nome ILIKE :search', { search: `%${search}%` });
+    }
+
+    const [data, total] = await query
+      .skip(skip)
+      .take(pageSize)
+      .orderBy('paciente.data_cadastro', 'DESC')
+      .getManyAndCount();
 
     return new PaginatedResponseDto(data, page, pageSize, total);
   }

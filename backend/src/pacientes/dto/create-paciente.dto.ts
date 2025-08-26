@@ -1,4 +1,4 @@
-import { Sexo } from "../entities/paciente.entity";
+import { Sexo, Status } from "../entities/paciente.entity";
 import { 
   IsString, 
   IsEmail, 
@@ -54,4 +54,8 @@ export class CreatePacienteDto {
   @IsEnum(Sexo, { message: 'Sexo deve ser Masculino, Feminino ou Outro' })
   @IsNotEmpty({ message: 'Sexo é obrigatório' })
   sexo: Sexo;
+
+  @IsEnum(Status, { message: 'Status deve ser Ativo ou Inativo' })
+  @IsNotEmpty({ message: 'Status é obrigatório' })
+  status: Status;
 }

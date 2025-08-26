@@ -2,8 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-
-export type Modalidade = 'CR'|'CT'|'DX'|'MG'|'MR'|'NM'|'OT'|'PT'|'RF'|'US'|'XA';
+import { Modalidade } from '../shared/utils/modalidade.utils';
 
 export interface ExameDto {
   id?: string;

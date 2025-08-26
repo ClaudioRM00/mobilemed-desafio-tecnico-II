@@ -20,8 +20,8 @@ export class PacientesController {
   }
 
   @Get()
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.pacientesService.findAll(paginationDto);
+  findAll(@Query() paginationDto: PaginationDto, @Query('search') search?: string) {
+    return this.pacientesService.findAll(paginationDto, search);
   }
 
   @Get(':id')

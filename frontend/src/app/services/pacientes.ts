@@ -12,6 +12,7 @@ export interface PacienteDto {
   endereco: string;
   documento_cpf: string;
   sexo: 'Masculino' | 'Feminino' | 'Outro';
+  status: 'Ativo' | 'Inativo';
 }
 
 export interface PaginatedResponse<T> {
@@ -31,8 +32,11 @@ export class PacientesService {
   private baseUrl = `${environment.apiBaseUrl}/pacientes`;
   constructor(private http: HttpClient) {}
 
-  list(page = 1, pageSize = 10): Observable<PaginatedResponse<PacienteDto>> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+  list(page = 1, pageSize = 10, search?: string): Observable<PaginatedResponse<PacienteDto>> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    if (search) {
+      params = params.set('search', search);
+    }
     return this.http.get<PaginatedResponse<PacienteDto>>(this.baseUrl, { params });
   }
 

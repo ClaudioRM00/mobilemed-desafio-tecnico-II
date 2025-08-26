@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
-import { ExamesService, ExameDto, Modalidade } from '../../../services/exames';
+import { takeUntil, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { ExamesService, ExameDto } from '../../../services/exames';
+import { PacientesService, PacienteDto } from '../../../services/pacientes';
+import { MODALIDADES_LIST, getModalidadeLabel as getModalidadeLabelUtil, Modalidade } from '../../../shared/utils/modalidade.utils';
 
 @Component({
   selector: 'app-exame-form',
@@ -16,7 +18,7 @@ import { ExamesService, ExameDto, Modalidade } from '../../../services/exames';
 export class ExameForm implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  modalidades: Modalidade[] = ['CR','CT','DX','MG','MR','NM','OT','PT','RF','US','XA'];
+  modalidades: Modalidade[] = MODALIDADES_LIST;
   
   form: FormGroup;
   submitting = false;
@@ -24,10 +26,18 @@ export class ExameForm implements OnInit, OnDestroy {
   error: string | null = null;
   isEditMode = false;
   exameId: string | null = null;
+  formSubmitted = false;
+  
+  // Propriedades para busca de pacientes
+  pacientes: PacienteDto[] = [];
+  pacientesLoading = false;
+  showPacientesDropdown = false;
+  selectedPaciente: PacienteDto | null = null;
 
   constructor(
     private fb: FormBuilder,
     private examesService: ExamesService,
+    private pacientesService: PacientesService,
     private router: Router,
     private route: ActivatedRoute
   ) {
@@ -37,10 +47,19 @@ export class ExameForm implements OnInit, OnDestroy {
       id_paciente: ['', [Validators.required]],
       data_exame: ['', [Validators.required]],
       idempotencyKey: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(255)]],
+      pacienteSearch: [''], // Campo para busca
     });
   }
 
   ngOnInit() {
+    console.log('Modalidades array:', this.modalidades);
+    console.log('MODALIDADES_LIST:', MODALIDADES_LIST);
+    
+    // Teste direto da função
+    console.log('Teste CR:', this.getModalidadeLabel('CR'));
+    console.log('Teste CT:', this.getModalidadeLabel('CT'));
+    console.log('Teste US:', this.getModalidadeLabel('US'));
+    
     this.route.params
       .pipe(takeUntil(this.destroy$))
       .subscribe(params => {
@@ -54,11 +73,18 @@ export class ExameForm implements OnInit, OnDestroy {
           this.gerarChave();
         }
       });
+
+    // Configurar busca de pacientes
+    this.setupPacienteSearch();
+
+    // Adicionar listener para fechar dropdown ao clicar fora
+    document.addEventListener('click', this.onDocumentClick.bind(this));
   }
 
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+    document.removeEventListener('click', this.onDocumentClick.bind(this));
   }
 
   loadExame(id: string) {
@@ -76,11 +102,33 @@ export class ExameForm implements OnInit, OnDestroy {
             data_exame: exame.data_exame,
             idempotencyKey: exame.idempotencyKey
           });
+          
+          // Carregar dados do paciente se existir ID
+          if (exame.id_paciente) {
+            this.loadPacienteData(exame.id_paciente);
+          }
+          
           this.loading = false;
         },
         error: (error: any) => {
           this.error = error.message || 'Erro ao carregar exame';
           this.loading = false;
+        }
+      });
+  }
+
+  loadPacienteData(pacienteId: string) {
+    this.pacientesService.getById(pacienteId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (paciente: PacienteDto) => {
+          this.selectedPaciente = paciente;
+          this.form.patchValue({
+            pacienteSearch: `${paciente.nome} (${paciente.documento_cpf})`
+          });
+        },
+        error: (error) => {
+          console.error('Erro ao carregar dados do paciente:', error);
         }
       });
   }
@@ -92,6 +140,8 @@ export class ExameForm implements OnInit, OnDestroy {
   }
 
   onSubmit() {
+    this.formSubmitted = true;
+    
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -134,20 +184,87 @@ export class ExameForm implements OnInit, OnDestroy {
     }
   }
 
+  setupPacienteSearch() {
+    // Configurar busca de pacientes com debounce
+    this.form.get('pacienteSearch')?.valueChanges
+      .pipe(
+        takeUntil(this.destroy$),
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((value: string) => {
+          if (value && value.length >= 2) {
+            this.pacientesLoading = true;
+            return this.pacientesService.list(1, 10, value);
+          } else {
+            this.pacientes = [];
+            this.showPacientesDropdown = false;
+            return [];
+          }
+        })
+      )
+      .subscribe({
+        next: (response: any) => {
+          if (response && response.data) {
+            this.pacientes = response.data;
+            this.showPacientesDropdown = this.pacientes.length > 0;
+          } else {
+            this.pacientes = [];
+            this.showPacientesDropdown = false;
+          }
+          this.pacientesLoading = false;
+        },
+        error: (error) => {
+          console.error('Erro ao buscar pacientes:', error);
+          this.pacientesLoading = false;
+          this.pacientes = [];
+          this.showPacientesDropdown = false;
+        }
+      });
+  }
+
+  onPacienteSearch(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    if (!value) {
+      this.selectedPaciente = null;
+      this.form.patchValue({ id_paciente: '' });
+      this.showPacientesDropdown = false;
+    } else if (this.selectedPaciente) {
+      // Se o usuário digitou algo diferente do paciente selecionado, limpar seleção
+      const expectedValue = `${this.selectedPaciente.nome} (${this.selectedPaciente.documento_cpf})`;
+      if (value !== expectedValue) {
+        this.selectedPaciente = null;
+        this.form.patchValue({ id_paciente: '' });
+      }
+    }
+  }
+
+  selectPaciente(paciente: PacienteDto) {
+    this.selectedPaciente = paciente;
+    this.form.patchValue({ 
+      id_paciente: paciente.id,
+      pacienteSearch: `${paciente.nome} (${paciente.documento_cpf})`
+    });
+    this.showPacientesDropdown = false;
+  }
+
+  onDocumentClick(event: Event) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.paciente-search-container')) {
+      this.showPacientesDropdown = false;
+    }
+  }
+
+  getPacienteDisplayName(): string {
+    if (this.selectedPaciente) {
+      return `${this.selectedPaciente.nome} (${this.selectedPaciente.documento_cpf})`;
+    }
+    return '';
+  }
+
   getModalidadeLabel(modalidade: string): string {
-    const modalidades: { [key: string]: string } = {
-      'CR': 'Radiografia Computadorizada',
-      'CT': 'Tomografia Computadorizada',
-      'DX': 'Radiografia Digital',
-      'MG': 'Mamografia',
-      'MR': 'Ressonância Magnética',
-      'NM': 'Medicina Nuclear',
-      'OT': 'Outros',
-      'PT': 'Tomografia por Emissão',
-      'RF': 'Fluoroscopia',
-      'US': 'Ultrassonografia',
-      'XA': 'Angiografia'
-    };
-    return modalidades[modalidade] || modalidade;
+    console.log('getModalidadeLabel called with:', modalidade);
+    const result = getModalidadeLabelUtil(modalidade);
+    console.log('getModalidadeLabel result:', result);
+    return result;
   }
 }

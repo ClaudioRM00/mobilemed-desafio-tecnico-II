@@ -1,8 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { RouterModule } from '@angular/router';
-
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { PacientesService, PaginatedResponse as PacientesPaginatedResponse, PacienteDto } from '../../services/pacientes';
+import { ExamesService, PaginatedResponse as ExamesPaginatedResponse, ExameDto } from '../../services/exames';
 
 @Component({
   selector: 'app-dashboard',
@@ -32,7 +35,10 @@ import { RouterModule } from '@angular/router';
               <div class="ml-5 w-0 flex-1">
                 <dl>
                   <dt class="text-sm font-medium text-medical-500 truncate">Total de Pacientes</dt>
-                  <dd class="text-lg font-medium text-medical-900">156</dd>
+                  <dd class="text-lg font-medium text-medical-900">
+                    <span *ngIf="loadingPacientes" class="text-medical-400">Carregando...</span>
+                    <span *ngIf="!loadingPacientes">{{ totalPacientes }}</span>
+                  </dd>
                 </dl>
               </div>
             </div>
@@ -60,7 +66,10 @@ import { RouterModule } from '@angular/router';
               <div class="ml-5 w-0 flex-1">
                 <dl>
                   <dt class="text-sm font-medium text-medical-500 truncate">Total de Exames</dt>
-                  <dd class="text-lg font-medium text-medical-900">342</dd>
+                  <dd class="text-lg font-medium text-medical-900">
+                    <span *ngIf="loadingExames" class="text-medical-400">Carregando...</span>
+                    <span *ngIf="!loadingExames">{{ totalExames }}</span>
+                  </dd>
                 </dl>
               </div>
             </div>
@@ -73,6 +82,7 @@ import { RouterModule } from '@angular/router';
             </div>
           </div>
         </div>
+      </div>
 
       <!-- Quick Actions -->
       <div class="bg-white shadow-card rounded-lg border border-medical-200">
@@ -116,106 +126,61 @@ import { RouterModule } from '@angular/router';
         </div>
       </div>
 
-      <!-- Recent Activity -->
-      <div class="bg-white shadow-card rounded-lg border border-medical-200">
-        <div class="px-6 py-4 border-b border-medical-200">
-          <h3 class="text-lg font-medium text-medical-900">Atividade Recente</h3>
-        </div>
-        <div class="p-6">
-          <div class="flow-root">
-            <ul class="-mb-8">
-              <li>
-                <div class="relative pb-8">
-                  <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-medical-200" aria-hidden="true"></span>
-                  <div class="relative flex space-x-3">
-                    <div>
-                      <span class="h-8 w-8 rounded-full bg-success-500 flex items-center justify-center ring-8 ring-white">
-                        <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </span>
-                    </div>
-                    <div class="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
-                      <div>
-                        <p class="text-sm text-medical-500">Exame de sangue <span class="font-medium text-medical-900">concluído</span> para <span class="font-medium text-medical-900">Maria Silva</span></p>
-                      </div>
-                      <div class="whitespace-nowrap text-right text-sm text-medical-500">
-                        <time>3 min atrás</time>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </li>
-              <li>
-                <div class="relative pb-8">
-                  <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-medical-200" aria-hidden="true"></span>
-                  <div class="relative flex space-x-3">
-                    <div>
-                      <span class="h-8 w-8 rounded-full bg-primary-500 flex items-center justify-center ring-8 ring-white">
-                        <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-                        </svg>
-                      </span>
-                    </div>
-                    <div class="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
-                      <div>
-                        <p class="text-sm text-medical-500">Novo paciente <span class="font-medium text-medical-900">João Santos</span> cadastrado</p>
-                      </div>
-                      <div class="whitespace-nowrap text-right text-sm text-medical-500">
-                        <time>1 hora atrás</time>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </li>
-              <li>
-                <div class="relative pb-8">
-                  <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-medical-200" aria-hidden="true"></span>
-                  <div class="relative flex space-x-3">
-                    <div>
-                      <span class="h-8 w-8 rounded-full bg-warning-500 flex items-center justify-center ring-8 ring-white">
-                        <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-                        </svg>
-                      </span>
-                    </div>
-                    <div class="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
-                      <div>
-                        <p class="text-sm text-medical-500">Exame de <span class="font-medium text-medical-900">ultrassom</span> agendado para <span class="font-medium text-medical-900">Ana Costa</span></p>
-                      </div>
-                      <div class="whitespace-nowrap text-right text-sm text-medical-500">
-                        <time>2 horas atrás</time>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </li>
-              <li>
-                <div class="relative">
-                  <div class="relative flex space-x-3">
-                    <div>
-                      <span class="h-8 w-8 rounded-full bg-success-500 flex items-center justify-center ring-8 ring-white">
-                        <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </span>
-                    </div>
-                    <div class="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
-                      <div>
-                        <p class="text-sm text-medical-500">Exame de <span class="font-medium text-medical-900">raio-X</span> concluído para <span class="font-medium text-medical-900">Carlos Oliveira</span></p>
-                      </div>
-                      <div class="whitespace-nowrap text-right text-sm text-medical-500">
-                        <time>3 horas atrás</time>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
+      
     </div>
   `
 })
-export class DashboardComponent {}
+export class DashboardComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+
+  totalPacientes = 0;
+  totalExames = 0;
+  loadingPacientes = true;
+  loadingExames = true;
+
+  constructor(
+    private pacientesService: PacientesService,
+    private examesService: ExamesService
+  ) {}
+
+  ngOnInit() {
+    this.loadStats();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  loadStats() {
+    // Carregar total de pacientes
+    this.loadingPacientes = true;
+    this.pacientesService.list(1, 1) // Buscar apenas 1 item para obter o total
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: PacientesPaginatedResponse<PacienteDto>) => {
+          this.totalPacientes = response.meta.total;
+          this.loadingPacientes = false;
+        },
+        error: (error) => {
+          console.error('Erro ao carregar total de pacientes:', error);
+          this.loadingPacientes = false;
+        }
+      });
+
+    // Carregar total de exames
+    this.loadingExames = true;
+    this.examesService.list(1, 1) // Buscar apenas 1 item para obter o total
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: ExamesPaginatedResponse<ExameDto>) => {
+          this.totalExames = response.meta.total;
+          this.loadingExames = false;
+        },
+        error: (error) => {
+          console.error('Erro ao carregar total de exames:', error);
+          this.loadingExames = false;
+        }
+      });
+  }
+}

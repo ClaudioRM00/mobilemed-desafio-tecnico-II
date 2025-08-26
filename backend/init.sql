@@ -13,7 +13,7 @@ SET timezone = 'America/Sao_Paulo';
 
 -- Configurar parâmetros de performance
 ALTER SYSTEM SET shared_preload_libraries = 'pg_stat_statements';
-ALTER SYSTEM SET pg_stat_statements.track = 'all';
+--ALTER SYSTEM SET pg_stat_statements.track = 'all';
 ALTER SYSTEM SET log_statement = 'all';
 ALTER SYSTEM SET log_min_duration_statement = 1000;
 

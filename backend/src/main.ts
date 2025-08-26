@@ -12,8 +12,8 @@ async function bootstrap() {
   // Configurar ValidationPipe global
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: false, // Temporariamente desabilitado para debug
-      forbidNonWhitelisted: false, // Temporariamente desabilitado para debug
+      whitelist: true, // Remove propriedades não decoradas
+      forbidNonWhitelisted: true, // Rejeita requisições com propriedades não permitidas
       transform: true, // Transforma automaticamente tipos
       transformOptions: {
         enableImplicitConversion: true, // Permite conversão implícita de tipos
