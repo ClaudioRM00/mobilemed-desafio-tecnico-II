@@ -1,0 +1,264 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-medical-900">{{ isEditMode ? 'Editar Paciente' : 'Novo Paciente' }}</h1>
+      <p class="text-medical-600 mt-1">{{ isEditMode ? 'Edite as informações do paciente' : 'Cadastre um novo paciente no sistema' }}</p>
+    </div>
+    <a
+      routerLink="/pacientes"
+      class="btn-secondary flex items-center gap-2"
+    >
+      <svg
+        class="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
+        />
+      </svg>
+      Voltar
+    </a>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="flex justify-center py-12">
+    <div class="flex items-center gap-3">
+      <svg
+        class="animate-spin h-8 w-8 text-primary-500"
+        viewBox="0 0 50 50"
+      >
+        <circle
+          class="opacity-30"
+          cx="25"
+          cy="25"
+          r="20"
+          stroke="currentColor"
+          stroke-width="5"
+          fill="none"
+        />
+        <circle
+          class="text-primary-600"
+          cx="25"
+          cy="25"
+          r="20"
+          stroke="currentColor"
+          stroke-width="5"
+          fill="none"
+          stroke-dasharray="100"
+          stroke-dashoffset="75"
+        />
+      </svg>
+      <span class="text-medical-600">{{ isEditMode ? 'Carregando paciente...' : 'Carregando...' }}</span>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <div *ngIf="!loading" class="bg-white shadow-card rounded-lg border border-medical-200">
+    <div class="px-6 py-4 border-b border-medical-200">
+      <h3 class="text-lg font-medium text-medical-900">Informações do Paciente</h3>
+    </div>
+    
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="p-6 space-y-6">
+      <!-- Personal Information -->
+      <div>
+        <h4 class="text-sm font-medium text-medical-900 mb-4">Informações Pessoais</h4>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label class="block text-sm font-medium text-medical-700 mb-2">
+              Nome completo *
+            </label>
+            <input
+              type="text"
+              formControlName="nome"
+              class="input-field"
+              placeholder="Digite o nome completo"
+            />
+            <div
+              *ngIf="form.get('nome')?.invalid && form.get('nome')?.touched"
+              class="mt-1 text-sm text-danger-600"
+            >
+              Nome é obrigatório
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-medical-700 mb-2">
+              Email *
+            </label>
+            <input
+              type="email"
+              formControlName="email"
+              class="input-field"
+              placeholder="Digite o email"
+            />
+            <div
+              *ngIf="form.get('email')?.invalid && form.get('email')?.touched"
+              class="mt-1 text-sm text-danger-600"
+            >
+              Email válido é obrigatório
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-medical-700 mb-2">
+              CPF *
+            </label>
+            <input
+              type="text"
+              formControlName="documento_cpf"
+              class="input-field"
+              placeholder="000.000.000-00"
+            />
+            <div
+              *ngIf="form.get('documento_cpf')?.invalid && form.get('documento_cpf')?.touched"
+              class="mt-1 text-sm text-danger-600"
+            >
+              CPF é obrigatório
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-medical-700 mb-2">
+              Telefone *
+            </label>
+            <input
+              type="tel"
+              formControlName="telefone"
+              class="input-field"
+              placeholder="(11) 99999-9999"
+            />
+            <div
+              *ngIf="form.get('telefone')?.invalid && form.get('telefone')?.touched"
+              class="mt-1 text-sm text-danger-600"
+            >
+              Telefone é obrigatório
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-medical-700 mb-2">
+              Data de nascimento *
+            </label>
+            <input
+              type="date"
+              formControlName="data_nascimento"
+              class="input-field"
+            />
+            <div
+              *ngIf="form.get('data_nascimento')?.invalid && form.get('data_nascimento')?.touched"
+              class="mt-1 text-sm text-danger-600"
+            >
+              Data de nascimento é obrigatória
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-medical-700 mb-2">
+              Sexo *
+            </label>
+            <select formControlName="sexo" class="input-field">
+              <option value="">Selecione</option>
+              <option value="Masculino">Masculino</option>
+              <option value="Feminino">Feminino</option>
+              <option value="Outro">Outro</option>
+            </select>
+            <div
+              *ngIf="form.get('sexo')?.invalid && form.get('sexo')?.touched"
+              class="mt-1 text-sm text-danger-600"
+            >
+              Sexo é obrigatório
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Address -->
+      <div>
+        <h4 class="text-sm font-medium text-medical-900 mb-4">Endereço</h4>
+        <div>
+          <label class="block text-sm font-medium text-medical-700 mb-2">
+            Endereço completo *
+          </label>
+          <textarea
+            formControlName="endereco"
+            rows="3"
+            class="input-field"
+            placeholder="Digite o endereço completo"
+          ></textarea>
+          <div
+            *ngIf="form.get('endereco')?.invalid && form.get('endereco')?.touched"
+            class="mt-1 text-sm text-danger-600"
+          >
+            Endereço é obrigatório
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div
+        *ngIf="error"
+        class="bg-danger-50 border border-danger-200 rounded-lg p-4"
+      >
+        <div class="flex items-center gap-3">
+          <svg
+            class="w-5 h-5 text-danger-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+            />
+          </svg>
+          <p class="text-sm text-danger-800">{{ error }}</p>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="flex items-center justify-end space-x-3 pt-6 border-t border-medical-200">
+        <a
+          routerLink="/pacientes"
+          class="btn-secondary"
+        >
+          Cancelar
+        </a>
+        <button
+          type="submit"
+          [disabled]="form.invalid || submitting"
+          class="btn-primary"
+        >
+          <svg
+            *ngIf="submitting"
+            class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          {{ submitting ? (isEditMode ? 'Salvando...' : 'Cadastrando...') : (isEditMode ? 'Salvar Alterações' : 'Cadastrar Paciente') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

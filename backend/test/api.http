@@ -1,0 +1,79 @@
+
+### Criar novo paciente
+POST http://localhost:3000/pacientes
+Content-Type: application/json
+
+{
+  "nome": "João Silva Santos",
+  "email": "joao.silva@email.com",
+  "data_nascimento": "1990-05-15",
+  "telefone": "(11) 98765-4321",
+  "endereco": "Rua das Flores, 123 - Bairro Centro - São Paulo/SP",
+  "documento_cpf": "123.456.789-00",
+  "sexo": "Masculino"
+}
+
+### Consultar Pacientes cadastrados (com paginação)
+GET http://localhost:3000/pacientes?page=1&pageSize=10
+
+### Consultar Pacientes cadastrados (sem parâmetros - usa padrão)
+GET http://localhost:3000/pacientes
+
+### Alterar Paciente cadastrado
+PATCH http://localhost:3000/pacientes/05169ac2-04a5-45f8-9630-2069317de715
+Content-Type: application/json
+
+{
+  "nome": "João Silva Santos"
+}
+
+### Alterar Paciente cadastrado
+PATCH http://localhost:3000/pacientes/05169ac2-04a5-45f8-9630-2069317de715
+Content-Type: application/json
+
+{
+  "status": "Inativo"
+}
+
+-----------------------------------------------------------------------------
+### Criar novo exame (com idempotencyKey)
+POST http://localhost:3000/exames
+Content-Type: application/json
+
+{
+  "nome_exame": "Raio-X de Tórax",
+  "modalidade": "CR",
+  "id_paciente": "05169ac2-04a5-45f8-9630-2069317de715",
+  "data_exame": "2024-06-01T10:00:00Z",
+  "idempotencyKey": "exame-001-raio-x-torax-2024-06-01"
+}
+
+### Reenviar exame com mesma idempotencyKey (deve retornar o mesmo exame)
+POST http://localhost:3000/exames
+Content-Type: application/json
+
+{
+  "nome_exame": "Raio-X de Tórax",
+  "modalidade": "CR",
+  "id_paciente": "05169ac2-04a5-45f8-9630-2069317de715",
+  "data_exame": "2024-06-01T10:00:00Z",
+  "idempotencyKey": "exame-001-raio-x-torax-2024-06-01"
+}
+
+### Consultar Exames cadastrados (com paginação)
+GET http://localhost:3000/exames?page=1&pageSize=10
+
+### Consultar Exames cadastrados (sem parâmetros - usa padrão)
+GET http://localhost:3000/exames
+
+### Atualizar exame existente
+PATCH http://localhost:3000/exames/49cbccda-8e64-4013-a461-9beba24feaa1
+Content-Type: application/json
+
+{
+  "nome_exame": "Raio-X de Tórax PA e Lateral",
+  "modalidade": "CR"
+}
+
+### Deletar exame
+DELETE http://localhost:3000/exames/6b6171fd-74b9-4a87-9cac-85450d47c8b9
