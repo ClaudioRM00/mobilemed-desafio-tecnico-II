@@ -105,6 +105,9 @@ describe('ExamesService', () => {
     });
 
     it('should throw BadRequestException when patient does not exist', async () => {
+      // Mock para não encontrar exame existente
+      mockRepository.findOne.mockResolvedValue(null);
+      // Mock para paciente não existir
       mockPacientesService.findOne.mockRejectedValue(
         new NotFoundException('Patient not found'),
       );
@@ -117,6 +120,9 @@ describe('ExamesService', () => {
     });
 
     it('should handle database errors gracefully', async () => {
+      // Mock para não encontrar exame existente
+      mockRepository.findOne.mockResolvedValue(null);
+      // Mock para paciente existir
       mockPacientesService.findOne.mockResolvedValue(mockPaciente);
       mockRepository.create.mockReturnValue(new Exame(createExameDto));
       mockRepository.save.mockRejectedValue(
@@ -132,6 +138,9 @@ describe('ExamesService', () => {
         modalidade: 'INVALID' as Modalidade,
       };
 
+      // Mock para não encontrar exame existente
+      mockRepository.findOne.mockResolvedValue(null);
+      // Mock para paciente existir
       mockPacientesService.findOne.mockResolvedValue(mockPaciente);
       mockRepository.create.mockReturnValue(new Exame(invalidExameDto));
       mockRepository.save.mockRejectedValue(new Error('Invalid enum value'));
