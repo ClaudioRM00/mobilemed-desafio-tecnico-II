@@ -1,58 +1,52 @@
-import { Repository } from "typeorm";
-import { Paciente } from "../entities/paciente.entity";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { UpdatePacienteDto } from "../dto/update-paciente.dto";
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Paciente } from '../entities/paciente.entity';
 
 @Injectable()
 export class UpdatePacienteUseCase {
-    constructor(
-        @InjectRepository(Paciente)
-        private pacienteRepo: Repository<Paciente>,
-    ) {}
+  constructor(
+    @InjectRepository(Paciente)
+    private readonly pacienteRepository: Repository<Paciente>,
+  ) {}
+
+  async execute(id: string, updatePacienteDto: Record<string, unknown>): Promise<Paciente> {
+    const paciente = await this.pacienteRepository.findOne({ where: { id } });
     
-    async update(id: string, input: UpdatePacienteDto)
-    {
-        const paciente = await this.pacienteRepo.findOneOrFail({ where: { id } });
-
-        const mudancas: Partial<Paciente> = {};
-        let houveAlteracao = false;
- 
-        const camposAtualizaveis: (keyof UpdatePacienteDto)[] = [
-            'nome',
-            'email',
-            'data_nascimento',
-            'telefone',
-            'endereco',
-            'documento_cpf',
-            'sexo',
-            'status'
-        ];
-
-        for (const campo of camposAtualizaveis) {
-            if (input[campo] !== undefined && input[campo] !== paciente[campo]) {
-                // Tratar data_nascimento especificamente
-                if (campo === 'data_nascimento' && typeof input[campo] === 'string') {
-                    try {
-                        (mudancas as any)[campo] = new Date(input[campo] + 'T00:00:00.000Z');
-                    } catch (error) {
-                        console.error('Erro ao converter data:', error);
-                        (mudancas as any)[campo] = input[campo];
-                    }
-                } else {
-                    (mudancas as any)[campo] = input[campo];
-                }
-                houveAlteracao = true;
-            }
-        }
-
-        if (houveAlteracao) {
-            mudancas.data_atualizacao = new Date();
-            
-            Object.assign(paciente, mudancas);
-            await this.pacienteRepo.save(paciente);
-        }
-
-        return paciente;
+    if (!paciente) {
+      throw new NotFoundException('Paciente não encontrado');
     }
+
+    // Atualizar apenas os campos fornecidos
+    if (updatePacienteDto.nome !== undefined) {
+      paciente.nome = updatePacienteDto.nome as string;
+    }
+    
+    if (updatePacienteDto.email !== undefined) {
+      paciente.email = updatePacienteDto.email as string;
+    }
+    
+    if (updatePacienteDto.data_nascimento !== undefined) {
+      paciente.data_nascimento = new Date(updatePacienteDto.data_nascimento as string);
+    }
+    
+    if (updatePacienteDto.telefone !== undefined) {
+      paciente.telefone = updatePacienteDto.telefone as string;
+    }
+    
+    if (updatePacienteDto.endereco !== undefined) {
+      paciente.endereco = updatePacienteDto.endereco as string;
+    }
+    
+    if (updatePacienteDto.documento_cpf !== undefined) {
+      paciente.documento_cpf = updatePacienteDto.documento_cpf as string;
+    }
+    
+    if (updatePacienteDto.sexo !== undefined) {
+      paciente.sexo = updatePacienteDto.sexo as any;
+    }
+
+    paciente.data_atualizacao = new Date();
+    return await this.pacienteRepository.save(paciente);
+  }
 }

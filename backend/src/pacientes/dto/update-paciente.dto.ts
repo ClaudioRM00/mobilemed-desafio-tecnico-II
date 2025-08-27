@@ -1,56 +1,35 @@
-import { Sexo, Status } from "../entities/paciente.entity";
-import { 
-  IsString, 
-  IsEmail, 
-  IsDateString, 
-  IsEnum, 
-  IsOptional, 
-  Matches, 
-  MinLength, 
-  MaxLength 
-} from 'class-validator';
-import { Transform } from 'class-transformer';
+import { PartialType } from '@nestjs/mapped-types';
+import { IsString, IsEmail, IsDateString, IsEnum, IsOptional } from 'class-validator';
+import { Sexo } from '../entities/paciente.entity';
+import { CreatePacienteDto } from './create-paciente.dto';
 
-export class UpdatePacienteDto {    
+export class UpdatePacienteDto extends PartialType(CreatePacienteDto) {
   @IsOptional()
   @IsString()
-  @MinLength(2, { message: 'Nome deve ter pelo menos 2 caracteres' })
-  @MaxLength(100, { message: 'Nome deve ter no máximo 100 caracteres' })
   nome?: string;
 
   @IsOptional()
-  @IsEmail({}, { message: 'Email deve ser um endereço válido' })
+  @IsEmail()
   email?: string;
 
   @IsOptional()
-  data_nascimento?: Date | string;
+  @IsDateString()
+  data_nascimento?: string;
 
   @IsOptional()
   @IsString()
-  @Matches(/^\(\d{2}\) \d{5}-\d{4}$/, { 
-    message: 'Telefone deve estar no formato (XX) XXXXX-XXXX' 
-  })
   telefone?: string;
 
   @IsOptional()
   @IsString()
-  @MinLength(10, { message: 'Endereço deve ter pelo menos 10 caracteres' })
-  @MaxLength(200, { message: 'Endereço deve ter no máximo 200 caracteres' })
   endereco?: string;
 
   @IsOptional()
   @IsString()
-  @Matches(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, { 
-    message: 'CPF deve estar no formato XXX.XXX.XXX-XX' 
-  })
   documento_cpf?: string;
 
   @IsOptional()
-  @IsEnum(Sexo, { message: 'Sexo deve ser Masculino, Feminino ou Outro' })
+  @IsEnum(Sexo)
   sexo?: Sexo;
-
-  @IsOptional()
-  @IsEnum(Status, { message: 'Status deve ser Ativo ou Inativo' })
-  status?: Status;
 }
     

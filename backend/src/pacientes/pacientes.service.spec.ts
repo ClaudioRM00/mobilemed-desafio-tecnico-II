@@ -9,7 +9,6 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 
 describe('PacientesService', () => {
   let service: PacientesService;
-  let repository: Repository<Paciente>;
 
   const mockRepository = {
     create: jest.fn(),
@@ -18,6 +17,7 @@ describe('PacientesService', () => {
     findOne: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
+    remove: jest.fn(),
     createQueryBuilder: jest.fn(() => ({
       skip: jest.fn().mockReturnThis(),
       take: jest.fn().mockReturnThis(),
@@ -37,7 +37,6 @@ describe('PacientesService', () => {
     }).compile();
 
     service = module.get<PacientesService>(PacientesService);
-    repository = module.get<Repository<Paciente>>(getRepositoryToken(Paciente));
   });
 
   afterEach(() => {
@@ -114,9 +113,9 @@ describe('PacientesService', () => {
       const result = await service.findAll(1, 10);
 
       expect(result.data).toEqual(mockPatients);
-      expect(result.total).toBe(1);
-      expect(result.page).toBe(1);
-      expect(result.limit).toBe(10);
+      expect(result.meta.total).toBe(1);
+      expect(result.meta.page).toBe(1);
+      expect(result.meta.pageSize).toBe(10);
     });
 
     it('should handle empty results', async () => {
@@ -131,7 +130,7 @@ describe('PacientesService', () => {
       const result = await service.findAll(1, 10);
 
       expect(result.data).toEqual([]);
-      expect(result.total).toBe(0);
+      expect(result.meta.total).toBe(0);
     });
   });
 
@@ -211,11 +210,11 @@ describe('PacientesService', () => {
       });
 
       mockRepository.findOne.mockResolvedValue(mockPaciente);
-      mockRepository.delete.mockResolvedValue({ affected: 1 });
+      mockRepository.remove.mockResolvedValue(mockPaciente);
 
       await service.remove('test-id');
 
-      expect(mockRepository.delete).toHaveBeenCalledWith('test-id');
+      expect(mockRepository.remove).toHaveBeenCalledWith(mockPaciente);
     });
 
     it('should throw NotFoundException when removing non-existent patient', async () => {

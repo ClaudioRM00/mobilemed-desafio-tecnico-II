@@ -6,12 +6,10 @@ import { Exame, Modalidade } from './entities/exame.entity';
 import { CreateExameDto } from './dto/create-exame.dto';
 import { UpdateExameDto } from './dto/update-exame.dto';
 import { PacientesService } from '../pacientes/pacientes.service';
-import { ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 
 describe('ExamesService', () => {
   let service: ExamesService;
-  let repository: Repository<Exame>;
-  let pacientesService: PacientesService;
 
   const mockRepository = {
     create: jest.fn(),
@@ -20,6 +18,7 @@ describe('ExamesService', () => {
     findOne: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
+    remove: jest.fn(),
     createQueryBuilder: jest.fn(() => ({
       skip: jest.fn().mockReturnThis(),
       take: jest.fn().mockReturnThis(),
@@ -47,8 +46,6 @@ describe('ExamesService', () => {
     }).compile();
 
     service = module.get<ExamesService>(ExamesService);
-    repository = module.get<Repository<Exame>>(getRepositoryToken(Exame));
-    pacientesService = module.get<PacientesService>(PacientesService);
   });
 
   afterEach(() => {
@@ -157,9 +154,9 @@ describe('ExamesService', () => {
       const result = await service.findAll(1, 10);
 
       expect(result.data).toEqual(mockExams);
-      expect(result.total).toBe(1);
-      expect(result.page).toBe(1);
-      expect(result.limit).toBe(10);
+      expect(result.meta.total).toBe(1);
+      expect(result.meta.page).toBe(1);
+      expect(result.meta.pageSize).toBe(10);
     });
 
     it('should handle empty results', async () => {
@@ -174,7 +171,7 @@ describe('ExamesService', () => {
       const result = await service.findAll(1, 10);
 
       expect(result.data).toEqual([]);
-      expect(result.total).toBe(0);
+      expect(result.meta.total).toBe(0);
     });
   });
 
@@ -248,11 +245,11 @@ describe('ExamesService', () => {
       });
 
       mockRepository.findOne.mockResolvedValue(mockExame);
-      mockRepository.delete.mockResolvedValue({ affected: 1 });
+      mockRepository.remove.mockResolvedValue(mockExame);
 
       await service.remove('test-id');
 
-      expect(mockRepository.delete).toHaveBeenCalledWith('test-id');
+      expect(mockRepository.remove).toHaveBeenCalledWith(mockExame);
     });
 
     it('should throw NotFoundException when removing non-existent exam', async () => {
