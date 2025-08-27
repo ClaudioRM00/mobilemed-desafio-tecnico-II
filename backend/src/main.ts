@@ -2,8 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { PacientesModule } from './pacientes/pacientes.module';
-import { ExamesModule } from './exames/exames.module';
+// Removendo imports não utilizados para resolver erro de linting
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -40,7 +39,9 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   await app.listen(port);
   console.log(`🚀 Application is running on: http://localhost:${port}`);
-  console.log(`📚 Swagger documentation available at: http://localhost:${port}/swagger`);
+  console.log(
+    `📚 Swagger documentation available at: http://localhost:${port}/swagger`,
+  );
 }
 
 bootstrap().catch((error) => {

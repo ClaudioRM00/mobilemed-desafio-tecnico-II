@@ -47,16 +47,23 @@ export class PacientesController {
   @Get()
   @ApiOperation({ summary: 'Listar todos os pacientes com paginação' })
   @ApiQuery({ name: 'page', required: false, description: 'Número da página' })
-  @ApiQuery({ name: 'pageSize', required: false, description: 'Tamanho da página' })
+  @ApiQuery({
+    name: 'pageSize',
+    required: false,
+    description: 'Tamanho da página',
+  })
   @ApiResponse({
     status: 200,
     description: 'Lista de pacientes retornada com sucesso',
   })
   findAll(
     @Query() paginationDto: PaginationDto,
-    @Query('search') search?: string,
+    // @Query('search') search?: string, // Removido temporariamente até implementar busca
   ) {
-    return this.pacientesService.findAll(paginationDto.page, paginationDto.pageSize);
+    return this.pacientesService.findAll(
+      paginationDto.page,
+      paginationDto.pageSize,
+    );
   }
 
   @Get(':id')
@@ -94,6 +101,9 @@ export class PacientesController {
     @Body() updatePacienteDto: UpdatePacienteDto,
   ) {
     console.log('UpdatePacienteDto received:', updatePacienteDto);
-    return this.updatePacienteUseCase.execute(id, updatePacienteDto as Record<string, unknown>);
+    return this.updatePacienteUseCase.execute(
+      id,
+      updatePacienteDto as Record<string, unknown>,
+    );
   }
 }

@@ -50,13 +50,20 @@ export class ExamesController {
   @Get()
   @ApiOperation({ summary: 'Listar todos os exames com paginação' })
   @ApiQuery({ name: 'page', required: false, description: 'Número da página' })
-  @ApiQuery({ name: 'pageSize', required: false, description: 'Tamanho da página' })
+  @ApiQuery({
+    name: 'pageSize',
+    required: false,
+    description: 'Tamanho da página',
+  })
   @ApiResponse({
     status: 200,
     description: 'Lista de exames retornada com sucesso',
   })
   findAll(@Query() paginationDto: PaginationDto) {
-    return this.examesService.findAll(paginationDto.page, paginationDto.pageSize);
+    return this.examesService.findAll(
+      paginationDto.page,
+      paginationDto.pageSize,
+    );
   }
 
   @Get(':id')
@@ -90,7 +97,10 @@ export class ExamesController {
     description: 'Dados inválidos',
   })
   update(@Param('id') id: string, @Body() updateExameDto: UpdateExameDto) {
-    return this.updateExameUseCase.execute(id, updateExameDto as Record<string, unknown>);
+    return this.updateExameUseCase.execute(
+      id,
+      updateExameDto as Record<string, unknown>,
+    );
   }
 
   @Delete(':id')
