@@ -122,4 +122,4 @@ jobs:
         run: docker build -t mobilemed-frontend-test ./frontend
 
       - name: Test docker-compose build
-        run: docker-compose build
+        run: docker compose build

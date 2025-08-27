@@ -9,26 +9,26 @@ if ! command -v docker &> /dev/null; then
 fi
 
 # Verificar se Docker Compose está instalado
-if ! command -v docker-compose &> /dev/null; then
+if ! command -v docker &> /dev/null; then
     echo "❌ Docker Compose não está instalado. Por favor, instale o Docker Compose primeiro."
     exit 1
 fi
 
 # Parar containers existentes
 echo "🛑 Parando containers existentes..."
-docker-compose down
+docker compose down
 
 # Remover volumes existentes (opcional - descomente se quiser limpar tudo)
 # echo "🧹 Removendo volumes existentes..."
-# docker-compose down -v
+# docker compose down -v
 
 # Iniciar PostgreSQL
 echo "🐘 Iniciando PostgreSQL..."
-docker-compose up -d postgres
+docker compose up -d postgres
 
 # Aguardar PostgreSQL estar pronto
 echo "⏳ Aguardando PostgreSQL estar pronto..."
-until docker-compose exec -T postgres pg_isready -U postgres -d mobilemed_db; do
+until docker compose exec -T postgres pg_isready -U postgres -d mobilemed_db; do
     echo "Aguardando PostgreSQL..."
     sleep 2
 done
