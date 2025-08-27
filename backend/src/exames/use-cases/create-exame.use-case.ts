@@ -12,7 +12,13 @@ export class CreateExameUseCase {
     private readonly pacientesService: PacientesService,
   ) {}
 
-  async execute(createExameDto: any): Promise<Exame> {
+  async execute(createExameDto: {
+    idempotencyKey: string;
+    id_paciente: string;
+    modalidade: Modalidade;
+    nome_exame: string;
+    data_exame?: Date;
+  }): Promise<Exame> {
     // Verificar se já existe um exame com a mesma idempotencyKey
     const existingExame = await this.exameRepository.findOne({
       where: { idempotencyKey: createExameDto.idempotencyKey },
@@ -25,12 +31,12 @@ export class CreateExameUseCase {
     // Verificar se o paciente existe
     try {
       await this.pacientesService.findOne(createExameDto.id_paciente);
-    } catch (error) {
+    } catch {
       throw new BadRequestException('Paciente não encontrado');
     }
 
     // Validar modalidade
-    if (!Object.values(Modalidade).includes(createExameDto.modalidade as Modalidade)) {
+    if (!Object.values(Modalidade).includes(createExameDto.modalidade)) {
       throw new BadRequestException('Modalidade inválida');
     }
 

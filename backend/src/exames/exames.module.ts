@@ -8,13 +8,20 @@ import { CreateExameUseCase } from './use-cases/create-exame.use-case';
 import { UpdateExameUseCase } from './use-cases/update-exame.use-case';
 import { DeleteExameUseCase } from './use-cases/delete-exame.use-case';
 import { CommonModule } from '../common/common.module';
+import { PacientesModule } from '../pacientes/pacientes.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Exame, Paciente]), // Adicionar Paciente para validação
     CommonModule, // Importar para ter acesso ao TransactionService
+    PacientesModule, // Importar para ter acesso ao PacientesService
   ],
   controllers: [ExamesController],
-  providers: [ExamesService, CreateExameUseCase, UpdateExameUseCase, DeleteExameUseCase],
+  providers: [
+    ExamesService,
+    CreateExameUseCase,
+    UpdateExameUseCase,
+    DeleteExameUseCase,
+  ],
 })
 export class ExamesModule {}

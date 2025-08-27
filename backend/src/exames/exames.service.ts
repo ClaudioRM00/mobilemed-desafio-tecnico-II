@@ -1,7 +1,11 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Exame, Modalidade } from './entities/exame.entity';
+import { Exame } from './entities/exame.entity';
 import { PacientesService } from '../pacientes/pacientes.service';
 import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
 
@@ -13,9 +17,15 @@ export class ExamesService {
     private readonly pacientesService: PacientesService,
   ) {}
 
-  async create(createExameDto: any): Promise<Exame> {
+  async create(createExameDto: {
+    idempotencyKey: string;
+    id_paciente: string;
+    [key: string]: any;
+  }): Promise<Exame> {
     // Verificar se já existe um exame com a mesma idempotencyKey
-    const existingExame = await this.findByIdempotencyKey(createExameDto.idempotencyKey);
+    const existingExame = await this.findByIdempotencyKey(
+      createExameDto.idempotencyKey,
+    );
     if (existingExame) {
       return existingExame;
     }
@@ -23,7 +33,7 @@ export class ExamesService {
     // Verificar se o paciente existe
     try {
       await this.pacientesService.findOne(createExameDto.id_paciente);
-    } catch (error) {
+    } catch {
       throw new BadRequestException('Paciente não encontrado');
     }
 
@@ -33,7 +43,7 @@ export class ExamesService {
 
   async findAll(page = 1, limit = 10): Promise<PaginatedResponseDto<Exame>> {
     const skip = (page - 1) * limit;
-    
+
     const [data, total] = await this.exameRepository
       .createQueryBuilder('exame')
       .skip(skip)
@@ -51,7 +61,7 @@ export class ExamesService {
     return exame;
   }
 
-  async update(id: string, updateExameDto: any): Promise<Exame> {
+  async update(id: string, updateExameDto: Partial<Exame>): Promise<Exame> {
     const exame = await this.findOne(id);
     Object.assign(exame, updateExameDto);
     return await this.exameRepository.save(exame);
@@ -63,7 +73,9 @@ export class ExamesService {
   }
 
   async findByPatientId(patientId: string): Promise<Exame[]> {
-    return await this.exameRepository.find({ where: { id_paciente: patientId } });
+    return await this.exameRepository.find({
+      where: { id_paciente: patientId },
+    });
   }
 
   async findByIdempotencyKey(idempotencyKey: string): Promise<Exame | null> {

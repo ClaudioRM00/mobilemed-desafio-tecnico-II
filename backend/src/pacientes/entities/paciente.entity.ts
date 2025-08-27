@@ -50,10 +50,10 @@ export class Paciente {
     },
     id?: string,
   ) {
-        Object.assign(this, props);
-        this.id = id ?? crypto.randomUUID();
-        this.data_cadastro = new Date();
-        this.data_atualizacao = new Date();
-        this.status = Status.Ativo;
-    }
+    Object.assign(this, props);
+    this.id = id ?? crypto.randomUUID();
+    this.data_cadastro = new Date();
+    this.data_atualizacao = new Date();
+    this.status = Status.Ativo;
+  }
 }

@@ -14,7 +14,7 @@ export class TransactionService {
     operation: (queryRunner: QueryRunner) => Promise<T>,
   ): Promise<T> {
     const queryRunner = this.dataSource.createQueryRunner();
-    
+
     try {
       // Iniciar transação
       await queryRunner.connect();
@@ -47,12 +47,12 @@ export class TransactionService {
   ): Promise<T[]> {
     return this.executeInTransaction(async (queryRunner) => {
       const results: T[] = [];
-      
+
       for (const operation of operations) {
         const result = await operation(queryRunner);
         results.push(result);
       }
-      
+
       return results;
     });
   }

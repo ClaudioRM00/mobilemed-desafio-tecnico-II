@@ -14,5 +14,6 @@ import { CommonModule } from '../common/common.module';
   ],
   controllers: [PacientesController],
   providers: [PacientesService, CreatePacienteUseCase, UpdatePacienteUseCase],
+  exports: [PacientesService], // Exportar para que outros módulos possam usar
 })
 export class PacientesModule {}

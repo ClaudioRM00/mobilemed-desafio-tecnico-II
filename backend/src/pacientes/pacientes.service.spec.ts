@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { PacientesService } from './pacientes.service';
 import { Paciente, Sexo, Status } from './entities/paciente.entity';
 import { CreatePacienteDto } from './dto/create-paciente.dto';
@@ -75,14 +74,20 @@ describe('PacientesService', () => {
 
     it('should throw ConflictException when CPF already exists', async () => {
       mockRepository.create.mockReturnValue(new Paciente(createPacienteDto));
-      mockRepository.save.mockRejectedValue(new Error('duplicate key value violates unique constraint'));
+      mockRepository.save.mockRejectedValue(
+        new Error('duplicate key value violates unique constraint'),
+      );
 
-      await expect(service.create(createPacienteDto)).rejects.toThrow(ConflictException);
+      await expect(service.create(createPacienteDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should handle database errors gracefully', async () => {
       mockRepository.create.mockReturnValue(new Paciente(createPacienteDto));
-      mockRepository.save.mockRejectedValue(new Error('Database connection failed'));
+      mockRepository.save.mockRejectedValue(
+        new Error('Database connection failed'),
+      );
 
       await expect(service.create(createPacienteDto)).rejects.toThrow();
     });
@@ -151,13 +156,17 @@ describe('PacientesService', () => {
       const result = await service.findOne('test-id');
 
       expect(result).toEqual(mockPaciente);
-      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 'test-id' } });
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'test-id' },
+      });
     });
 
     it('should throw NotFoundException when patient not found', async () => {
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne('non-existent-id')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('non-existent-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -193,7 +202,9 @@ describe('PacientesService', () => {
     it('should throw NotFoundException when updating non-existent patient', async () => {
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.update('non-existent-id', updatePacienteDto)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.update('non-existent-id', updatePacienteDto),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -220,7 +231,9 @@ describe('PacientesService', () => {
     it('should throw NotFoundException when removing non-existent patient', async () => {
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.remove('non-existent-id')).rejects.toThrow(NotFoundException);
+      await expect(service.remove('non-existent-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -241,7 +254,9 @@ describe('PacientesService', () => {
       const result = await service.findByCpf('123.456.789-00');
 
       expect(result).toEqual(mockPaciente);
-      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { documento_cpf: '123.456.789-00' } });
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { documento_cpf: '123.456.789-00' },
+      });
     });
 
     it('should return null when CPF not found', async () => {

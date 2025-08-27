@@ -1,7 +1,11 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Paciente, Sexo, Status } from './entities/paciente.entity';
+import { Paciente } from './entities/paciente.entity';
 import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
 
 @Injectable()
@@ -11,12 +15,17 @@ export class PacientesService {
     private readonly pacienteRepository: Repository<Paciente>,
   ) {}
 
-  async create(createPacienteDto: any): Promise<Paciente> {
+  async create(createPacienteDto: Partial<Paciente>): Promise<Paciente> {
     try {
       const paciente = this.pacienteRepository.create(createPacienteDto);
       return await this.pacienteRepository.save(paciente);
-    } catch (error) {
-      if (error.message.includes('duplicate key value violates unique constraint')) {
+    } catch (error: unknown) {
+      if (
+        error instanceof Error &&
+        error.message?.includes(
+          'duplicate key value violates unique constraint',
+        )
+      ) {
         throw new ConflictException('CPF já cadastrado');
       }
       throw error;
@@ -25,7 +34,7 @@ export class PacientesService {
 
   async findAll(page = 1, limit = 10): Promise<PaginatedResponseDto<Paciente>> {
     const skip = (page - 1) * limit;
-    
+
     const [data, total] = await this.pacienteRepository
       .createQueryBuilder('paciente')
       .skip(skip)
@@ -43,7 +52,10 @@ export class PacientesService {
     return paciente;
   }
 
-  async update(id: string, updatePacienteDto: any): Promise<Paciente> {
+  async update(
+    id: string,
+    updatePacienteDto: Partial<Paciente>,
+  ): Promise<Paciente> {
     const paciente = await this.findOne(id);
     Object.assign(paciente, updatePacienteDto);
     return await this.pacienteRepository.save(paciente);
@@ -55,6 +67,8 @@ export class PacientesService {
   }
 
   async findByCpf(cpf: string): Promise<Paciente | null> {
-    return await this.pacienteRepository.findOne({ where: { documento_cpf: cpf } });
+    return await this.pacienteRepository.findOne({
+      where: { documento_cpf: cpf },
+    });
   }
 }

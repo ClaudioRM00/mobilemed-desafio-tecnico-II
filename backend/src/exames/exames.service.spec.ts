@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { ExamesService } from './exames.service';
 import { Exame, Modalidade } from './entities/exame.entity';
 import { CreateExameDto } from './dto/create-exame.dto';
@@ -84,7 +83,9 @@ describe('ExamesService', () => {
       expect(result.nome_exame).toBe(createExameDto.nome_exame);
       expect(result.modalidade).toBe(createExameDto.modalidade);
       expect(result.id_paciente).toBe(createExameDto.id_paciente);
-      expect(mockPacientesService.findOne).toHaveBeenCalledWith(createExameDto.id_paciente);
+      expect(mockPacientesService.findOne).toHaveBeenCalledWith(
+        createExameDto.id_paciente,
+      );
       expect(mockRepository.create).toHaveBeenCalledWith(createExameDto);
       expect(mockRepository.save).toHaveBeenCalledWith(mockExame);
     });
@@ -96,15 +97,21 @@ describe('ExamesService', () => {
       const result = await service.create(createExameDto);
 
       expect(result).toEqual(existingExame);
-      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { idempotencyKey: createExameDto.idempotencyKey } });
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { idempotencyKey: createExameDto.idempotencyKey },
+      });
       expect(mockRepository.create).not.toHaveBeenCalled();
       expect(mockRepository.save).not.toHaveBeenCalled();
     });
 
     it('should throw BadRequestException when patient does not exist', async () => {
-      mockPacientesService.findOne.mockRejectedValue(new NotFoundException('Patient not found'));
+      mockPacientesService.findOne.mockRejectedValue(
+        new NotFoundException('Patient not found'),
+      );
 
-      await expect(service.create(createExameDto)).rejects.toThrow(BadRequestException);
+      await expect(service.create(createExameDto)).rejects.toThrow(
+        BadRequestException,
+      );
       expect(mockRepository.create).not.toHaveBeenCalled();
       expect(mockRepository.save).not.toHaveBeenCalled();
     });
@@ -112,7 +119,9 @@ describe('ExamesService', () => {
     it('should handle database errors gracefully', async () => {
       mockPacientesService.findOne.mockResolvedValue(mockPaciente);
       mockRepository.create.mockReturnValue(new Exame(createExameDto));
-      mockRepository.save.mockRejectedValue(new Error('Database connection failed'));
+      mockRepository.save.mockRejectedValue(
+        new Error('Database connection failed'),
+      );
 
       await expect(service.create(createExameDto)).rejects.toThrow();
     });
@@ -190,13 +199,17 @@ describe('ExamesService', () => {
       const result = await service.findOne('test-id');
 
       expect(result).toEqual(mockExame);
-      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 'test-id' } });
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'test-id' },
+      });
     });
 
     it('should throw NotFoundException when exam not found', async () => {
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne('non-existent-id')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('non-existent-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -230,7 +243,9 @@ describe('ExamesService', () => {
     it('should throw NotFoundException when updating non-existent exam', async () => {
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.update('non-existent-id', updateExameDto)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.update('non-existent-id', updateExameDto),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -255,7 +270,9 @@ describe('ExamesService', () => {
     it('should throw NotFoundException when removing non-existent exam', async () => {
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.remove('non-existent-id')).rejects.toThrow(NotFoundException);
+      await expect(service.remove('non-existent-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -276,7 +293,9 @@ describe('ExamesService', () => {
       const result = await service.findByPatientId('patient-uuid');
 
       expect(result).toEqual(mockExams);
-      expect(mockRepository.find).toHaveBeenCalledWith({ where: { id_paciente: 'patient-uuid' } });
+      expect(mockRepository.find).toHaveBeenCalledWith({
+        where: { id_paciente: 'patient-uuid' },
+      });
     });
 
     it('should return empty array when no exams found for patient', async () => {
@@ -303,7 +322,9 @@ describe('ExamesService', () => {
       const result = await service.findByIdempotencyKey('unique-key-123');
 
       expect(result).toEqual(mockExame);
-      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { idempotencyKey: 'unique-key-123' } });
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { idempotencyKey: 'unique-key-123' },
+      });
     });
 
     it('should return null when idempotency key not found', async () => {
