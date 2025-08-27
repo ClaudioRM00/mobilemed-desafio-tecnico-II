@@ -3,6 +3,12 @@
 /node_modules
 /build
 
+# Generated files
+*.js.map
+*.d.ts
+*.js
+!src/**/*.js
+
 # Logs
 logs
 *.log

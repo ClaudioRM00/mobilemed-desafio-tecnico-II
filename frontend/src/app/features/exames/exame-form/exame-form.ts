@@ -29,7 +29,8 @@ export class ExameForm implements OnInit, OnDestroy {
   formSubmitted = false;
   
   // Propriedades para busca de pacientes
-  pacientes: PacienteDto[] = [];
+  allPacientes: PacienteDto[] = [];
+  filteredPacientes: PacienteDto[] = [];
   pacientesLoading = false;
   showPacientesDropdown = false;
   selectedPaciente: PacienteDto | null = null;
@@ -185,41 +186,59 @@ export class ExameForm implements OnInit, OnDestroy {
   }
 
   setupPacienteSearch() {
-    // Configurar busca de pacientes com debounce
+    // Carregar todos os pacientes no início
+    this.loadAllPacientes();
+
+    // Configurar busca local de pacientes
     this.form.get('pacienteSearch')?.valueChanges
       .pipe(
         takeUntil(this.destroy$),
         debounceTime(300),
-        distinctUntilChanged(),
-        switchMap((value: string) => {
-          if (value && value.length >= 2) {
-            this.pacientesLoading = true;
-            return this.pacientesService.list(1, 10, value);
-          } else {
-            this.pacientes = [];
-            this.showPacientesDropdown = false;
-            return [];
-          }
-        })
+        distinctUntilChanged()
       )
+      .subscribe((value: string) => {
+        this.filterPacientes(value);
+      });
+  }
+
+  loadAllPacientes() {
+    this.pacientesLoading = true;
+    this.pacientesService.list(1, 100) // Buscar até 100 pacientes
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: any) => {
           if (response && response.data) {
-            this.pacientes = response.data;
-            this.showPacientesDropdown = this.pacientes.length > 0;
+            this.allPacientes = response.data;
+            this.filteredPacientes = response.data;
           } else {
-            this.pacientes = [];
-            this.showPacientesDropdown = false;
+            this.allPacientes = [];
+            this.filteredPacientes = [];
           }
           this.pacientesLoading = false;
         },
         error: (error) => {
-          console.error('Erro ao buscar pacientes:', error);
+          console.error('Erro ao carregar pacientes:', error);
           this.pacientesLoading = false;
-          this.pacientes = [];
-          this.showPacientesDropdown = false;
+          this.allPacientes = [];
+          this.filteredPacientes = [];
         }
       });
+  }
+
+  filterPacientes(searchTerm: string) {
+    if (!searchTerm || searchTerm.length < 2) {
+      this.showPacientesDropdown = false;
+      return;
+    }
+
+    const filtered = this.allPacientes.filter(paciente => 
+      paciente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      paciente.documento_cpf.includes(searchTerm) ||
+      paciente.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    this.filteredPacientes = filtered;
+    this.showPacientesDropdown = filtered.length > 0;
   }
 
   onPacienteSearch(event: Event) {
