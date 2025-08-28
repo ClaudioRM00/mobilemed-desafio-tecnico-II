@@ -1,4 +1,4 @@
-version: '3.9'
+# Removed version as it's obsolete in newer Docker Compose versions
 
 services:
   postgres:
@@ -26,7 +26,6 @@ services:
     build: ./backend
     container_name: mobilemed_backend
     restart: unless-stopped
-    env_file: ./backend/env.example
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
@@ -35,6 +34,7 @@ services:
       DB_DATABASE: mobilemed_db
       DB_SCHEMA: public
       NODE_ENV: development
+      PORT: 3000
     ports:
       - "3000:3000"
     depends_on:
@@ -42,6 +42,12 @@ services:
         condition: service_healthy
     networks:
       - mobilemed_network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # One-shot container that seeds the database, then exits
   seed:
@@ -58,7 +64,7 @@ services:
       DB_DATABASE: mobilemed_db
       DB_SCHEMA: public
       NODE_ENV: development
-    command: npm run db:seed
+    command: sh -c "npm run db:seed"
     restart: "no"
     networks:
       - mobilemed_network
@@ -70,7 +76,8 @@ services:
     ports:
       - "4200:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - mobilemed_network
 

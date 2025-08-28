@@ -157,7 +157,7 @@ $ docker compose -f ../docker-compose.yml up db -d
 $ npm run start:dev
 ```
 
-API disponível em `http://localhost:3000`. Documentação Swagger em `/swagger` quando em modo dev.
+API disponível em `http://localhost:3000`. Documentação Swagger em `/swagger` quando em modo dev. Health check em `/health`.
 
 ### Rodando Testes do Backend
 
@@ -203,7 +203,7 @@ $ npm ci
 $ npm run dev
 ```
 
-Acesse `http://localhost:4200` (porta padrão do Vite). Alterações recarregam automaticamente.
+Acesse `http://localhost:4200` (porta padrão do Angular). Alterações recarregam automaticamente.
 
 ### Rodando Testes do Frontend
 
@@ -276,7 +276,7 @@ Atalhos que encapsulam comandos complexos:
 Backend (`backend/package.json`)
 * `start:dev` – Servidor Nest com HMR
 * `migration:generate` – Gera migração TypeORM a partir de alterações em entidades
-* `seed:run` – Executa seed do banco (`src/database/seeds/seed.ts`)
+* `db:seed` – Executa seed do banco (`src/database/seeds/seed.ts`)
 
 Frontend (`frontend/package.json`)
 * `dev` – Servidor Angular CLI com proxy

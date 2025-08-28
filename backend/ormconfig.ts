@@ -18,7 +18,7 @@ export default new DataSource({
   entities: [Paciente, Exame],
   migrations: isDev ? ['src/database/migrations/*.ts'] : ['dist/database/migrations/*.js'],
   migrationsTableName: 'migrations',
-  synchronize: false,
+  synchronize: true, // Enable synchronize for development
   logging: isDev,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });

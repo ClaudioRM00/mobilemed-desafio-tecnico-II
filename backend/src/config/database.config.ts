@@ -12,7 +12,7 @@ export const databaseConfig: TypeOrmModuleOptions = {
   schema: process.env.DB_SCHEMA || 'public',
   entities: [Paciente, Exame],
   autoLoadEntities: true,
-  synchronize: process.env.NODE_ENV === 'development',
+  synchronize: true, // Enable synchronize for development environment
   logging: process.env.NODE_ENV === 'development',
   ssl:
     process.env.NODE_ENV === 'production'
