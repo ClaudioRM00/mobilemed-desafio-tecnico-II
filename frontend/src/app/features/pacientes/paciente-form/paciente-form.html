@@ -115,6 +115,7 @@
               formControlName="documento_cpf"
               class="input-field"
               placeholder="000.000.000-00"
+              [readonly]="isEditMode"
             />
             <div
               *ngIf="form.get('documento_cpf')?.invalid && formSubmitted"

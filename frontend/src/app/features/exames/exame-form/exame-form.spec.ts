@@ -147,7 +147,7 @@ describe('ExameForm', () => {
     component.exameId = 'test-id';
     component.loadExame('test-id');
 
-    expect(component.error).toBe('Exam not found');
+    expect(component.error).toBe('Erro ao carregar exame');
   });
 
   it('should create exam successfully', () => {
@@ -199,7 +199,7 @@ describe('ExameForm', () => {
 
     component.onSubmit();
 
-    expect(component.error).toBe('Creation failed');
+    expect(component.error).toBe('Erro ao cadastrar exame');
     expect(component.submitting).toBeFalse();
   });
 

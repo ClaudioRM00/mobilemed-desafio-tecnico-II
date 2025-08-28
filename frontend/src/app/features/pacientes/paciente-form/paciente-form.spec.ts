@@ -90,6 +90,10 @@ describe('PacienteForm', () => {
     expect(statusControl?.hasError('required')).toBe(false); // Tem valor padrão
   });
 
+  it('should have CPF field enabled in create mode', () => {
+    expect(component.form.get('documento_cpf')?.disabled).toBe(false);
+  });
+
   it('should have email validator', () => {
     const emailControl = component.form.get('email');
     
@@ -203,6 +207,17 @@ describe('PacienteForm', () => {
       
       expect(component.error).toBe('Erro ao carregar paciente');
       expect(component.loading).toBe(false);
+    }));
+
+    it('should disable CPF field in edit mode', fakeAsync(() => {
+      pacientesService.getById.and.returnValue(of(mockPacienteDto));
+      component.isEditMode = true;
+      
+      component.loadPaciente('1');
+      tick();
+      fixture.detectChanges();
+      
+      expect(component.form.get('documento_cpf')?.disabled).toBe(true);
     }));
   });
 
