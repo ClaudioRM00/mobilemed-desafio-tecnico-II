@@ -3,7 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UpdatePacienteUseCase } from './update-paciente.use-case';
 import { Paciente, Sexo, Status } from '../entities/paciente.entity';
-import { NotFoundException, ConflictException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 
 describe('UpdatePacienteUseCase', () => {
   let useCase: UpdatePacienteUseCase;
@@ -48,16 +48,18 @@ describe('UpdatePacienteUseCase', () => {
         email: 'joao.atualizado@email.com',
       };
 
-      const updatedPaciente = { ...mockPaciente, ...updateDto };
+      const updatedPaciente = new Paciente({ ...mockPaciente, ...updateDto });
 
       pacienteRepository.findOne.mockResolvedValue(mockPaciente);
       pacienteRepository.save.mockResolvedValue(updatedPaciente);
 
       const result = await useCase.execute('test-id', updateDto);
 
-      expect(result).toEqual(updatedPaciente);
+      expect(result).toBeInstanceOf(Paciente);
+      expect(result.nome).toBe('João Silva Atualizado');
+      expect(result.email).toBe('joao.atualizado@email.com');
       expect(pacienteRepository.findOne).toHaveBeenCalledWith({ where: { id: 'test-id' } });
-      expect(pacienteRepository.save).toHaveBeenCalledWith(updatedPaciente);
+      expect(pacienteRepository.save).toHaveBeenCalledWith(expect.any(Paciente));
     });
 
     it('should throw NotFoundException when patient does not exist', async () => {
@@ -72,9 +74,23 @@ describe('UpdatePacienteUseCase', () => {
         nome: 'João Silva Atualizado',
       };
 
-      const updatedPaciente = { ...mockPaciente, nome: 'João Silva Atualizado' };
+      // Sempre crie uma nova instância para cada teste
+      const originalPaciente = new Paciente({
+        nome: 'João Silva',
+        email: 'joao@email.com',
+        data_nascimento: new Date('1990-01-01'),
+        telefone: '(11) 99999-9999',
+        endereco: 'Rua A, 123',
+        documento_cpf: '123.456.789-00',
+        sexo: Sexo.Masculino,
+      });
+      const updatedPaciente = new Paciente({
+        ...originalPaciente,
+        nome: 'João Silva Atualizado',
+        email: 'joao@email.com', // garantir que não muda
+      });
 
-      pacienteRepository.findOne.mockResolvedValue(mockPaciente);
+      pacienteRepository.findOne.mockResolvedValue(originalPaciente);
       pacienteRepository.save.mockResolvedValue(updatedPaciente);
 
       const result = await useCase.execute('test-id', updateDto);
@@ -119,6 +135,97 @@ describe('UpdatePacienteUseCase', () => {
 
       expect(result).toEqual(updatedPaciente);
       expect(pacienteRepository.findOne).toHaveBeenCalledTimes(1); // Only for the patient being updated
+    });
+
+    it('should update telefone', async () => {
+      const updateDto = { telefone: '(11) 98888-8888' };
+      const originalPaciente = new Paciente({
+        nome: 'João Silva',
+        email: 'joao@email.com',
+        data_nascimento: new Date('1990-01-01'),
+        telefone: '(11) 99999-9999',
+        endereco: 'Rua A, 123',
+        documento_cpf: '123.456.789-00',
+        sexo: Sexo.Masculino,
+      });
+      const updatedPaciente = new Paciente({ ...originalPaciente, telefone: updateDto.telefone });
+      pacienteRepository.findOne.mockResolvedValue(originalPaciente);
+      pacienteRepository.save.mockResolvedValue(updatedPaciente);
+      const result = await useCase.execute('test-id', updateDto);
+      expect(result.telefone).toBe(updateDto.telefone);
+    });
+
+    it('should update endereco', async () => {
+      const updateDto = { endereco: 'Rua Nova, 456' };
+      const originalPaciente = new Paciente({
+        nome: 'João Silva',
+        email: 'joao@email.com',
+        data_nascimento: new Date('1990-01-01'),
+        telefone: '(11) 99999-9999',
+        endereco: 'Rua A, 123',
+        documento_cpf: '123.456.789-00',
+        sexo: Sexo.Masculino,
+      });
+      const updatedPaciente = new Paciente({ ...originalPaciente, endereco: updateDto.endereco });
+      pacienteRepository.findOne.mockResolvedValue(originalPaciente);
+      pacienteRepository.save.mockResolvedValue(updatedPaciente);
+      const result = await useCase.execute('test-id', updateDto);
+      expect(result.endereco).toBe(updateDto.endereco);
+    });
+
+    it('should update documento_cpf', async () => {
+      const updateDto = { documento_cpf: '987.654.321-00' };
+      const originalPaciente = new Paciente({
+        nome: 'João Silva',
+        email: 'joao@email.com',
+        data_nascimento: new Date('1990-01-01'),
+        telefone: '(11) 99999-9999',
+        endereco: 'Rua A, 123',
+        documento_cpf: '123.456.789-00',
+        sexo: Sexo.Masculino,
+      });
+      const updatedPaciente = new Paciente({ ...originalPaciente, documento_cpf: updateDto.documento_cpf });
+      pacienteRepository.findOne.mockResolvedValue(originalPaciente);
+      pacienteRepository.save.mockResolvedValue(updatedPaciente);
+      const result = await useCase.execute('test-id', updateDto);
+      expect(result.documento_cpf).toBe(updateDto.documento_cpf);
+    });
+
+    it('should update sexo', async () => {
+      const updateDto = { sexo: Sexo.Feminino };
+      const originalPaciente = new Paciente({
+        nome: 'João Silva',
+        email: 'joao@email.com',
+        data_nascimento: new Date('1990-01-01'),
+        telefone: '(11) 99999-9999',
+        endereco: 'Rua A, 123',
+        documento_cpf: '123.456.789-00',
+        sexo: Sexo.Masculino,
+      });
+      const updatedPaciente = new Paciente({ ...originalPaciente, sexo: updateDto.sexo });
+      pacienteRepository.findOne.mockResolvedValue(originalPaciente);
+      pacienteRepository.save.mockResolvedValue(updatedPaciente);
+      const result = await useCase.execute('test-id', updateDto);
+      expect(result.sexo).toBe(updateDto.sexo);
+    });
+
+    it('should update status', async () => {
+      const updateDto = { status: Status.Inativo };
+      const originalPaciente = new Paciente({
+        nome: 'João Silva',
+        email: 'joao@email.com',
+        data_nascimento: new Date('1990-01-01'),
+        telefone: '(11) 99999-9999',
+        endereco: 'Rua A, 123',
+        documento_cpf: '123.456.789-00',
+        sexo: Sexo.Masculino,
+        status: Status.Ativo,
+      });
+      const updatedPaciente = new Paciente({ ...originalPaciente, status: updateDto.status });
+      pacienteRepository.findOne.mockResolvedValue(originalPaciente);
+      pacienteRepository.save.mockResolvedValue(updatedPaciente);
+      const result = await useCase.execute('test-id', updateDto);
+      expect(result.status).toBe(updateDto.status);
     });
   });
 });

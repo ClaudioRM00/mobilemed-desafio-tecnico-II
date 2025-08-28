@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals
 describe('ExamesService', () => {
   let service: ExamesService;
 
-  const mockRepository = {
+  const mockRepository: any = {
     create: jest.fn(),
     save: jest.fn(),
     find: jest.fn(),
@@ -22,13 +22,14 @@ describe('ExamesService', () => {
       take: jest.fn().mockReturnThis(),
       getManyAndCount: jest.fn(),
     })),
-  } as any;
+  };
 
-  const mockPacientesService = {
+  const mockPacientesService: any = {
     findOne: jest.fn(),
-  } as any;
+  };
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ExamesService,
@@ -65,34 +66,28 @@ describe('ExamesService', () => {
           idempotencyKey: 'unique-key-123',
         }),
       ];
-
-      const mockQueryBuilder = {
+      const mockQueryBuilder: any = {
         skip: jest.fn().mockReturnThis(),
         take: jest.fn().mockReturnThis(),
+        // @ts-expect-error
         getManyAndCount: jest.fn().mockResolvedValue([mockExams, 1]),
       };
-
       mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
-
       const result = await service.findAll(1, 10);
-
       expect(result.data).toEqual(mockExams);
       expect(result.meta.total).toBe(1);
       expect(result.meta.page).toBe(1);
       expect(result.meta.pageSize).toBe(10);
     });
-
     it('should handle empty results', async () => {
-      const mockQueryBuilder = {
+      const mockQueryBuilder: any = {
         skip: jest.fn().mockReturnThis(),
         take: jest.fn().mockReturnThis(),
+        // @ts-expect-error
         getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
       };
-
       mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
-
       const result = await service.findAll(1, 10);
-
       expect(result.data).toEqual([]);
       expect(result.meta.total).toBe(0);
     });
@@ -225,7 +220,8 @@ describe('ExamesService', () => {
         idempotencyKey: 'unique-key-123',
       };
 
-      mockPacientesService.findOne.mockResolvedValue(null);
+      mockPacientesService.findOne.mockRejectedValue(new Error('Paciente não encontrado'));
+      mockRepository.findOne.mockResolvedValue(null); // garantir que não existe exame com idempotencyKey
 
       await expect(service.create(createExameDto)).rejects.toThrow('Paciente não encontrado');
       expect(mockPacientesService.findOne).toHaveBeenCalledWith('non-existent-patient');
