@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Patch,
+  Put,
   Param,
   Delete,
   Query,
@@ -81,7 +82,7 @@ export class ExamesController {
     return this.examesService.findOne(id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   @ApiOperation({ summary: 'Atualizar um exame' })
   @ApiParam({ name: 'id', description: 'ID do exame' })
   @ApiResponse({

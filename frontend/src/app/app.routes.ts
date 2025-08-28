@@ -17,6 +17,7 @@ export const routes: Routes = [
       { path: 'pacientes/:id/editar', component: PacienteForm },
       { path: 'exames', component: ExamesList },
       { path: 'exames/novo', component: ExameForm },
+      { path: 'exames/:id/editar', component: ExameForm },
       { path: '**', redirectTo: '' }
     ]
   }

@@ -96,11 +96,21 @@ export class ExameForm implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (exame: ExameDto) => {
+          // Converter a data para o formato correto para o input datetime-local
+          let dataExame = exame.data_exame;
+          if (dataExame && typeof dataExame === 'string') {
+            // Se a data estiver no formato ISO, converter para o formato local
+            if (dataExame.includes('T')) {
+              // Remover os milissegundos e segundos se houver
+              dataExame = dataExame.split('.')[0];
+            }
+          }
+          
           this.form.patchValue({
             nome_exame: exame.nome_exame,
             modalidade: exame.modalidade,
             id_paciente: exame.id_paciente,
-            data_exame: exame.data_exame,
+            data_exame: dataExame,
             idempotencyKey: exame.idempotencyKey
           });
           
@@ -151,9 +161,28 @@ export class ExameForm implements OnInit, OnDestroy {
     this.submitting = true;
     this.error = null;
 
+    // Extrair apenas os campos necessários para o DTO, excluindo pacienteSearch
+    const { pacienteSearch, ...formData } = this.form.value;
+    
+    // Converter a data para preservar o fuso horário local
+    let dataExame = formData.data_exame;
+    if (dataExame) {
+      // Se a data estiver no formato YYYY-MM-DDTHH:mm, criar uma data UTC
+      if (typeof dataExame === 'string' && dataExame.includes('T')) {
+        // Extrair os componentes da data local
+        const [datePart, timePart] = dataExame.split('T');
+        const [year, month, day] = datePart.split('-').map(Number);
+        const [hours, minutes] = timePart.split(':').map(Number);
+        
+        // Criar uma data UTC com os componentes locais
+        const utcDate = new Date(Date.UTC(year, month - 1, day, hours, minutes));
+        dataExame = utcDate.toISOString();
+      }
+    }
+    
     const exameData: ExameDto = {
-      ...this.form.value,
-      data_exame: new Date(this.form.value.data_exame).toISOString()
+      ...formData,
+      data_exame: dataExame
     };
 
     if (this.isEditMode && this.exameId) {

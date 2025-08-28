@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Patch,
+  Put,
   Param,
   Query,
 } from '@nestjs/common';
@@ -81,7 +82,7 @@ export class PacientesController {
     return this.pacientesService.findOne(id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   @ApiOperation({ summary: 'Atualizar um paciente' })
   @ApiParam({ name: 'id', description: 'ID do paciente' })
   @ApiResponse({

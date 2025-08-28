@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Paciente, Sexo } from '../entities/paciente.entity';
+import { Paciente, Sexo, Status } from '../entities/paciente.entity';
 
 @Injectable()
 export class UpdatePacienteUseCase {
@@ -49,6 +49,10 @@ export class UpdatePacienteUseCase {
 
     if (updatePacienteDto.sexo !== undefined) {
       paciente.sexo = updatePacienteDto.sexo as Sexo;
+    }
+
+    if (updatePacienteDto.status !== undefined) {
+      paciente.status = updatePacienteDto.status as Status;
     }
 
     paciente.data_atualizacao = new Date();

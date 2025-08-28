@@ -7,7 +7,7 @@ import {
   IsOptional,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Sexo } from '../entities/paciente.entity';
+import { Sexo, Status } from '../entities/paciente.entity';
 import { CreatePacienteDto } from './create-paciente.dto';
 
 export class UpdatePacienteDto extends PartialType(CreatePacienteDto) {
@@ -74,4 +74,14 @@ export class UpdatePacienteDto extends PartialType(CreatePacienteDto) {
   @IsOptional()
   @IsEnum(Sexo)
   sexo?: Sexo;
+
+  @ApiProperty({
+    description: 'Status do paciente',
+    enum: Status,
+    example: Status.Ativo,
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(Status)
+  status?: Status;
 }

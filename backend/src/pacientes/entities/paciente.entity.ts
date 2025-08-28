@@ -39,7 +39,7 @@ export class Paciente {
   status: Status; //Valores possíveis: 'Ativo', 'Inativo'
 
   constructor(
-    props: {
+    props?: {
       nome: string;
       email: string;
       data_nascimento: Date;
@@ -47,13 +47,20 @@ export class Paciente {
       endereco: string;
       documento_cpf: string;
       sexo: Sexo;
+      status?: Status;
     },
     id?: string,
   ) {
-    Object.assign(this, props);
+    // Inicializar propriedades com valores padrão
     this.id = id ?? crypto.randomUUID();
     this.data_cadastro = new Date();
     this.data_atualizacao = new Date();
     this.status = Status.Ativo;
+
+    // Aplicar propriedades se fornecidas
+    if (props) {
+      Object.assign(this, props);
+      this.status = props.status || Status.Ativo;
+    }
   }
 }

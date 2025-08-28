@@ -6,7 +6,7 @@ import {
   IsOptional,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Sexo } from '../entities/paciente.entity';
+import { Sexo, Status } from '../entities/paciente.entity';
 
 export class CreatePacienteDto {
   @ApiProperty({
@@ -59,17 +59,12 @@ export class CreatePacienteDto {
   @IsEnum(Sexo)
   sexo: Sexo;
 
+  @ApiProperty({
+    description: 'Status do paciente',
+    enum: Status,
+    example: Status.Ativo,
+  })
   @IsOptional()
-  @IsString()
-  transform(): Record<string, unknown> {
-    return {
-      nome: this.nome,
-      email: this.email,
-      data_nascimento: new Date(this.data_nascimento),
-      telefone: this.telefone,
-      endereco: this.endereco,
-      documento_cpf: this.documento_cpf,
-      sexo: this.sexo,
-    };
-  }
+  @IsEnum(Status)
+  status?: Status;
 }

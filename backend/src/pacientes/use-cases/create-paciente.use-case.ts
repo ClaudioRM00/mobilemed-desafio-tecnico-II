@@ -1,6 +1,6 @@
 import { Repository } from 'typeorm';
 import { CreatePacienteDto } from '../dto/create-paciente.dto';
-import { Paciente } from '../entities/paciente.entity';
+import { Paciente, Status } from '../entities/paciente.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable, ConflictException } from '@nestjs/common';
 import { TransactionService } from '../../common/services/transaction.service';
@@ -29,6 +29,7 @@ export class CreatePacienteUseCase {
       const paciente = new Paciente({
         ...input,
         data_nascimento: new Date(input.data_nascimento),
+        status: input.status || Status.Ativo,
       });
       return queryRunner.manager.save(Paciente, paciente);
     });
