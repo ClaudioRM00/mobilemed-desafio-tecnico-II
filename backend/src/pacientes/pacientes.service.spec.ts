@@ -88,6 +88,35 @@ describe('PacientesService', () => {
       expect(result.data).toEqual([]);
       expect(result.meta.total).toBe(0);
     });
+
+    it('should handle different page and pageSize values', async () => {
+      const mockPacientes = [
+        new Paciente({
+          nome: 'Maria Santos',
+          email: 'maria@email.com',
+          data_nascimento: new Date('1985-01-01'),
+          telefone: '(11) 88888-8888',
+          endereco: 'Rua B, 456',
+          documento_cpf: '987.654.321-00',
+          sexo: Sexo.Feminino,
+        }),
+      ];
+
+      const mockQueryBuilder = {
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn().mockResolvedValue([mockPacientes, 1]),
+      };
+
+      mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+
+      const result = await service.findAll(3, 20);
+
+      expect(result.data).toEqual(mockPacientes);
+      expect(result.meta.total).toBe(1);
+      expect(result.meta.page).toBe(3);
+      expect(result.meta.pageSize).toBe(20);
+    });
   });
 
   describe('findOne', () => {
@@ -191,6 +220,63 @@ describe('PacientesService', () => {
 
       await expect(service.create(createPacienteDto)).rejects.toThrow(
         'Duplicate entry',
+      );
+    });
+
+    it('should throw ConflictException when CPF violates unique constraint', async () => {
+      const createPacienteDto = {
+        nome: 'João Silva',
+        email: 'joao@email.com',
+        data_nascimento: new Date('1990-01-01'),
+        telefone: '(11) 99999-9999',
+        endereco: 'Rua A, 123',
+        documento_cpf: '123.456.789-00',
+        sexo: Sexo.Masculino,
+      };
+
+      const duplicateError = new Error('duplicate key value violates unique constraint');
+      mockRepository.save.mockRejectedValue(duplicateError);
+
+      await expect(service.create(createPacienteDto)).rejects.toThrow(
+        'CPF já cadastrado',
+      );
+    });
+
+    it('should throw original error when not a duplicate constraint error', async () => {
+      const createPacienteDto = {
+        nome: 'João Silva',
+        email: 'joao@email.com',
+        data_nascimento: new Date('1990-01-01'),
+        telefone: '(11) 99999-9999',
+        endereco: 'Rua A, 123',
+        documento_cpf: '123.456.789-00',
+        sexo: Sexo.Masculino,
+      };
+
+      const otherError = new Error('Some other database error');
+      mockRepository.save.mockRejectedValue(otherError);
+
+      await expect(service.create(createPacienteDto)).rejects.toThrow(
+        'Some other database error',
+      );
+    });
+
+    it('should throw original error when error is not an Error instance', async () => {
+      const createPacienteDto = {
+        nome: 'João Silva',
+        email: 'joao@email.com',
+        data_nascimento: new Date('1990-01-01'),
+        telefone: '(11) 99999-9999',
+        endereco: 'Rua A, 123',
+        documento_cpf: '123.456.789-00',
+        sexo: Sexo.Masculino,
+      };
+
+      const otherError = 'String error instead of Error instance';
+      mockRepository.save.mockRejectedValue(otherError);
+
+      await expect(service.create(createPacienteDto)).rejects.toBe(
+        'String error instead of Error instance',
       );
     });
   });

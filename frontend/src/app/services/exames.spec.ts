@@ -66,6 +66,36 @@ describe('ExamesService', () => {
       expect(req.request.method).toBe('GET');
       req.flush(mockPaginatedResponse);
     });
+
+    it('should handle different pagination parameters', () => {
+      service.list(2, 5).subscribe();
+
+      const req = httpMock.expectOne('/api/exames?page=2&pageSize=5');
+      expect(req.request.method).toBe('GET');
+      req.flush(mockPaginatedResponse);
+    });
+
+    it('should handle empty response', () => {
+      const emptyResponse = {
+        data: [],
+        meta: {
+          total: 0,
+          page: 1,
+          pageSize: 10,
+          totalPages: 0,
+          hasNext: false,
+          hasPrevious: false,
+        },
+      };
+
+      service.list(1, 10).subscribe(response => {
+        expect(response.data.length).toBe(0);
+        expect(response.meta.total).toBe(0);
+      });
+
+      const req = httpMock.expectOne('/api/exames?page=1&pageSize=10');
+      req.flush(emptyResponse);
+    });
   });
 
   describe('create', () => {
@@ -166,6 +196,42 @@ describe('ExamesService', () => {
 
       const req = httpMock.expectOne('/api/exames/test-id');
       req.flush('Bad Request', { status: 400, statusText: 'Bad Request' });
+    });
+  });
+
+  describe('delete', () => {
+    it('should delete an exam successfully', () => {
+      service.delete('test-id').subscribe(response => {
+        expect(response).toBeNull();
+      });
+
+      const req = httpMock.expectOne('/api/exames/test-id');
+      expect(req.request.method).toBe('DELETE');
+      req.flush(null);
+    });
+
+    it('should handle delete errors', () => {
+      service.delete('non-existent-id').subscribe({
+        next: () => fail('should have failed'),
+        error: (error) => {
+          expect(error.status).toBe(404);
+        },
+      });
+
+      const req = httpMock.expectOne('/api/exames/non-existent-id');
+      req.flush('Not Found', { status: 404, statusText: 'Not Found' });
+    });
+
+    it('should handle server errors during delete', () => {
+      service.delete('test-id').subscribe({
+        next: () => fail('should have failed'),
+        error: (error) => {
+          expect(error.status).toBe(500);
+        },
+      });
+
+      const req = httpMock.expectOne('/api/exames/test-id');
+      req.flush('Internal Server Error', { status: 500, statusText: 'Internal Server Error' });
     });
   });
 });

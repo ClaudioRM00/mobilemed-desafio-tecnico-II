@@ -46,4 +46,8 @@ export class ExamesService {
   update(id: string, dto: Partial<ExameDto>): Observable<ExameDto> {
     return this.http.put<ExameDto>(`${this.baseUrl}/${id}`, dto);
   }
+
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
 }

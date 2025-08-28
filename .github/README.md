@@ -67,7 +67,7 @@ Manter ambos os serviços juntos simplifica o onboarding, a configuração de CI
 |          | [TypeORM](https://typeorm.io/) | ORM baseado em decorators, integrado ao NestJS. |
 |          | PostgreSQL 15 | Banco relacional robusto e open-source. |
 |          | Jest + Supertest | Testes unitários e e2e rápidos no ecossistema Node. |
-| Frontend | [Angular](https://angular.io/) 17 + [Vite](https://vitejs.dev/) | Framework maduro com tooling sólido; Vite para HMR ultrarrápido. |
+| Frontend | [Angular](https://angular.io/) 20 | Framework maduro com tooling sólido. |
 |          | [TailwindCSS](https://tailwindcss.com/) | CSS utilitário para desenvolvimento de UI ágil. |
 |          | RxJS, Angular Router | Estado reativo e roteamento. |
 | Ferramentas | Docker / Docker Compose | Setup completo com um único comando. |
@@ -157,7 +157,7 @@ $ docker compose -f ../docker-compose.yml up db -d
 $ npm run start:dev
 ```
 
-API disponível em `http://localhost:3000`. Documentação Swagger em `/api` quando em modo dev.
+API disponível em `http://localhost:3000`. Documentação Swagger em `/swagger` quando em modo dev.
 
 ### Rodando Testes do Backend
 
@@ -231,9 +231,11 @@ O `docker-compose.yml` na raiz orquestra todo o ambiente para desenvolvimento e 
 
 Serviço | Imagem | Portas | Finalidade
 --------|--------|--------|-----------
-`db` | `postgres:15-alpine` | 5432 | Banco relacional com volume persistente
-`api` | `node:18-alpine` + Nest | 3000 | Serviço backend
-`web` | `nginx:alpine` | 80 → 4200 | Serve app Angular compilada
+`postgres` | `postgres:15-alpine` | 5433→5432 | Banco de dados relacional
+`backend` | build `./backend` (Node 18 + Nest) | 3000 | API REST
+`frontend` | build `./frontend` (Nginx) | 4200→80 | SPA Angular compilada
+`seed` | reutiliza imagem `backend` | — | Popula dados iniciais e encerra
+`pgadmin` | `dpage/pgadmin4` | 8080→80 | UI de administração do Postgres
 
 ### Tarefas Comuns
 
@@ -277,9 +279,9 @@ Backend (`backend/package.json`)
 * `seed:run` – Executa seed do banco (`src/database/seeds/seed.ts`)
 
 Frontend (`frontend/package.json`)
-* `dev` – Servidor Vite
+* `dev` – Servidor Angular CLI com proxy
 * `build` – Bundle de produção
-* `preview` – Preview local do build compilado
+* `preview` – Preview local do build compilado *(remover se não existir)*
 
 Raiz do repositório (`package.json`) *(futuro)*
 * `lint` – Roda eslint no backend & frontend

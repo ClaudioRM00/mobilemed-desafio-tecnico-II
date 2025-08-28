@@ -6,7 +6,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { ExamesService } from './exames.service';
 import { Exame, Modalidade } from './entities/exame.entity';
 import { PacientesService } from '../pacientes/pacientes.service';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 import {
   afterEach,
   beforeEach,
@@ -100,6 +100,29 @@ describe('ExamesService', () => {
       const result = await service.findAll(1, 10);
       expect(result.data).toEqual([]);
       expect(result.meta.total).toBe(0);
+    });
+    it('should handle different page and pageSize values', async () => {
+      const mockExams = [
+        new Exame({
+          nome_exame: 'Tomografia',
+          modalidade: Modalidade.CT,
+          id_paciente: 'patient-uuid',
+          data_exame: new Date('2024-01-15'),
+          idempotencyKey: 'unique-key-456',
+        }),
+      ];
+      const mockQueryBuilder: any = {
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        // @ts-expect-error: Mocking query builder for test purposes
+        getManyAndCount: jest.fn().mockResolvedValue([mockExams, 1]),
+      };
+      mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+      const result = await service.findAll(2, 5);
+      expect(result.data).toEqual(mockExams);
+      expect(result.meta.total).toBe(1);
+      expect(result.meta.page).toBe(2);
+      expect(result.meta.pageSize).toBe(5);
     });
   });
 
@@ -240,6 +263,25 @@ describe('ExamesService', () => {
       );
       expect(mockPacientesService.findOne).toHaveBeenCalledWith(
         'non-existent-patient',
+      );
+    });
+
+    it('should throw BadRequestException when patient not found', async () => {
+      const createExameDto = {
+        nome_exame: 'Ressonância Magnética',
+        modalidade: Modalidade.MR,
+        id_paciente: 'non-existent-patient',
+        data_exame: new Date('2024-01-15'),
+        idempotencyKey: 'unique-key-123',
+      };
+
+      mockPacientesService.findOne.mockRejectedValue(
+        new NotFoundException('Paciente não encontrado'),
+      );
+      mockRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.create(createExameDto)).rejects.toThrow(
+        BadRequestException,
       );
     });
 
