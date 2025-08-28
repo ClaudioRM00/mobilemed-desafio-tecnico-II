@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -54,15 +56,21 @@ describe('UpdateExameUseCase', () => {
       expect(result).toBeInstanceOf(Exame);
       expect(result.nome_exame).toBe('Tomografia Computadorizada');
       expect(result.modalidade).toBe(Modalidade.CT);
-      expect(exameRepository.findOne).toHaveBeenCalledWith({ where: { id: 'test-id' } });
+      expect(exameRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'test-id' },
+      });
       expect(exameRepository.save).toHaveBeenCalledWith(expect.any(Exame));
     });
 
     it('should throw NotFoundException when exam does not exist', async () => {
       exameRepository.findOne.mockResolvedValue(null);
 
-      await expect(useCase.execute('non-existent-id', {})).rejects.toThrow(NotFoundException);
-      expect(exameRepository.findOne).toHaveBeenCalledWith({ where: { id: 'non-existent-id' } });
+      await expect(useCase.execute('non-existent-id', {})).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(exameRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'non-existent-id' },
+      });
     });
 
     it('should handle partial updates', async () => {
@@ -76,7 +84,11 @@ describe('UpdateExameUseCase', () => {
         data_exame: new Date('2024-01-15'),
         idempotencyKey: 'unique-key-123',
       });
-      const updatedExame = new Exame({ ...originalExame, nome_exame: 'Tomografia Computadorizada', modalidade: Modalidade.MR });
+      const updatedExame = new Exame({
+        ...originalExame,
+        nome_exame: 'Tomografia Computadorizada',
+        modalidade: Modalidade.MR,
+      });
 
       exameRepository.findOne.mockResolvedValue(originalExame);
       exameRepository.save.mockResolvedValue(updatedExame);
@@ -98,7 +110,10 @@ describe('UpdateExameUseCase', () => {
         data_exame: new Date('2024-01-15'),
         idempotencyKey: 'unique-key-123',
       });
-      const updatedExame = new Exame({ ...originalExame, data_exame: new Date('2024-02-15T10:00:00.000Z') });
+      const updatedExame = new Exame({
+        ...originalExame,
+        data_exame: new Date('2024-02-15T10:00:00.000Z'),
+      });
 
       exameRepository.findOne.mockResolvedValue(originalExame);
       exameRepository.save.mockResolvedValue(updatedExame);
@@ -119,7 +134,9 @@ describe('UpdateExameUseCase', () => {
       exameRepository.findOne.mockResolvedValue(originalExame);
       exameRepository.save.mockRejectedValue(new Error('Database error'));
 
-      await expect(useCase.execute('test-id', { nome_exame: 'Test' })).rejects.toThrow('Database error');
+      await expect(
+        useCase.execute('test-id', { nome_exame: 'Test' }),
+      ).rejects.toThrow('Database error');
     });
 
     it('should preserve existing fields when not provided in update', async () => {
@@ -133,7 +150,11 @@ describe('UpdateExameUseCase', () => {
         data_exame: new Date('2024-01-15'),
         idempotencyKey: 'unique-key-123',
       });
-      const updatedExame = new Exame({ ...originalExame, nome_exame: 'Tomografia Computadorizada', modalidade: Modalidade.MR });
+      const updatedExame = new Exame({
+        ...originalExame,
+        nome_exame: 'Tomografia Computadorizada',
+        modalidade: Modalidade.MR,
+      });
 
       exameRepository.findOne.mockResolvedValue(originalExame);
       exameRepository.save.mockResolvedValue(updatedExame);

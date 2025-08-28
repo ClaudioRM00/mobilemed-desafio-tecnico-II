@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -34,7 +36,9 @@ describe('UpdatePacienteUseCase', () => {
     }).compile();
 
     useCase = module.get<UpdatePacienteUseCase>(UpdatePacienteUseCase);
-    pacienteRepository = module.get<Repository<Paciente>>(getRepositoryToken(Paciente));
+    pacienteRepository = module.get<Repository<Paciente>>(
+      getRepositoryToken(Paciente),
+    );
   });
 
   it('should be defined', () => {
@@ -58,15 +62,23 @@ describe('UpdatePacienteUseCase', () => {
       expect(result).toBeInstanceOf(Paciente);
       expect(result.nome).toBe('João Silva Atualizado');
       expect(result.email).toBe('joao.atualizado@email.com');
-      expect(pacienteRepository.findOne).toHaveBeenCalledWith({ where: { id: 'test-id' } });
-      expect(pacienteRepository.save).toHaveBeenCalledWith(expect.any(Paciente));
+      expect(pacienteRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'test-id' },
+      });
+      expect(pacienteRepository.save).toHaveBeenCalledWith(
+        expect.any(Paciente),
+      );
     });
 
     it('should throw NotFoundException when patient does not exist', async () => {
       pacienteRepository.findOne.mockResolvedValue(null);
 
-      await expect(useCase.execute('non-existent-id', {})).rejects.toThrow(NotFoundException);
-      expect(pacienteRepository.findOne).toHaveBeenCalledWith({ where: { id: 'non-existent-id' } });
+      await expect(useCase.execute('non-existent-id', {})).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(pacienteRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'non-existent-id' },
+      });
     });
 
     it('should handle partial updates', async () => {
@@ -104,7 +116,10 @@ describe('UpdatePacienteUseCase', () => {
         data_nascimento: '1985-05-15',
       };
 
-      const updatedPaciente = { ...mockPaciente, data_nascimento: new Date('1985-05-15') };
+      const updatedPaciente = {
+        ...mockPaciente,
+        data_nascimento: new Date('1985-05-15'),
+      };
 
       pacienteRepository.findOne.mockResolvedValue(mockPaciente);
       pacienteRepository.save.mockResolvedValue(updatedPaciente);
@@ -118,7 +133,9 @@ describe('UpdatePacienteUseCase', () => {
       pacienteRepository.findOne.mockResolvedValue(mockPaciente);
       pacienteRepository.save.mockRejectedValue(new Error('Database error'));
 
-      await expect(useCase.execute('test-id', { nome: 'Test' })).rejects.toThrow('Database error');
+      await expect(
+        useCase.execute('test-id', { nome: 'Test' }),
+      ).rejects.toThrow('Database error');
     });
 
     it('should not check CPF if not provided in update', async () => {
@@ -126,7 +143,10 @@ describe('UpdatePacienteUseCase', () => {
         nome: 'João Silva Atualizado',
       };
 
-      const updatedPaciente = { ...mockPaciente, nome: 'João Silva Atualizado' };
+      const updatedPaciente = {
+        ...mockPaciente,
+        nome: 'João Silva Atualizado',
+      };
 
       pacienteRepository.findOne.mockResolvedValue(mockPaciente);
       pacienteRepository.save.mockResolvedValue(updatedPaciente);
@@ -148,7 +168,10 @@ describe('UpdatePacienteUseCase', () => {
         documento_cpf: '123.456.789-00',
         sexo: Sexo.Masculino,
       });
-      const updatedPaciente = new Paciente({ ...originalPaciente, telefone: updateDto.telefone });
+      const updatedPaciente = new Paciente({
+        ...originalPaciente,
+        telefone: updateDto.telefone,
+      });
       pacienteRepository.findOne.mockResolvedValue(originalPaciente);
       pacienteRepository.save.mockResolvedValue(updatedPaciente);
       const result = await useCase.execute('test-id', updateDto);
@@ -166,7 +189,10 @@ describe('UpdatePacienteUseCase', () => {
         documento_cpf: '123.456.789-00',
         sexo: Sexo.Masculino,
       });
-      const updatedPaciente = new Paciente({ ...originalPaciente, endereco: updateDto.endereco });
+      const updatedPaciente = new Paciente({
+        ...originalPaciente,
+        endereco: updateDto.endereco,
+      });
       pacienteRepository.findOne.mockResolvedValue(originalPaciente);
       pacienteRepository.save.mockResolvedValue(updatedPaciente);
       const result = await useCase.execute('test-id', updateDto);
@@ -184,7 +210,10 @@ describe('UpdatePacienteUseCase', () => {
         documento_cpf: '123.456.789-00',
         sexo: Sexo.Masculino,
       });
-      const updatedPaciente = new Paciente({ ...originalPaciente, documento_cpf: updateDto.documento_cpf });
+      const updatedPaciente = new Paciente({
+        ...originalPaciente,
+        documento_cpf: updateDto.documento_cpf,
+      });
       pacienteRepository.findOne.mockResolvedValue(originalPaciente);
       pacienteRepository.save.mockResolvedValue(updatedPaciente);
       const result = await useCase.execute('test-id', updateDto);
@@ -202,7 +231,10 @@ describe('UpdatePacienteUseCase', () => {
         documento_cpf: '123.456.789-00',
         sexo: Sexo.Masculino,
       });
-      const updatedPaciente = new Paciente({ ...originalPaciente, sexo: updateDto.sexo });
+      const updatedPaciente = new Paciente({
+        ...originalPaciente,
+        sexo: updateDto.sexo,
+      });
       pacienteRepository.findOne.mockResolvedValue(originalPaciente);
       pacienteRepository.save.mockResolvedValue(updatedPaciente);
       const result = await useCase.execute('test-id', updateDto);
@@ -221,7 +253,10 @@ describe('UpdatePacienteUseCase', () => {
         sexo: Sexo.Masculino,
         status: Status.Ativo,
       });
-      const updatedPaciente = new Paciente({ ...originalPaciente, status: updateDto.status });
+      const updatedPaciente = new Paciente({
+        ...originalPaciente,
+        status: updateDto.status,
+      });
       pacienteRepository.findOne.mockResolvedValue(originalPaciente);
       pacienteRepository.save.mockResolvedValue(updatedPaciente);
       const result = await useCase.execute('test-id', updateDto);

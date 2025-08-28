@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -5,7 +9,7 @@ import { CreateExameUseCase } from './create-exame.use-case';
 import { PacientesService } from '../../pacientes/pacientes.service';
 import { CreateExameDto } from '../dto/create-exame.dto';
 import { Exame, Modalidade } from '../entities/exame.entity';
-import { NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 
 describe('CreateExameUseCase', () => {
   let useCase: CreateExameUseCase;
@@ -20,13 +24,16 @@ describe('CreateExameUseCase', () => {
     idempotencyKey: 'exame-123456789',
   };
 
-  const mockExame = new Exame({
-    nome_exame: 'Ressonância Magnética',
-    modalidade: Modalidade.MR,
-    id_paciente: 'patient-uuid',
-    data_exame: new Date('2024-01-15T10:30:00.000Z'),
-    idempotencyKey: 'exame-123456789',
-  }, 'exame-uuid');
+  const mockExame = new Exame(
+    {
+      nome_exame: 'Ressonância Magnética',
+      modalidade: Modalidade.MR,
+      id_paciente: 'patient-uuid',
+      data_exame: new Date('2024-01-15T10:30:00.000Z'),
+      idempotencyKey: 'exame-123456789',
+    },
+    'exame-uuid',
+  );
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -98,10 +105,14 @@ describe('CreateExameUseCase', () => {
     it('should throw BadRequestException when patient does not exist', async () => {
       // Arrange
       exameRepository.findOne.mockResolvedValue(null);
-      pacientesService.findOne.mockRejectedValue(new Error('Patient not found'));
+      pacientesService.findOne.mockRejectedValue(
+        new Error('Patient not found'),
+      );
 
       // Act & Assert
-      await expect(useCase.execute(mockCreateExameDto)).rejects.toThrow(BadRequestException);
+      await expect(useCase.execute(mockCreateExameDto)).rejects.toThrow(
+        BadRequestException,
+      );
       expect(exameRepository.findOne).toHaveBeenCalledWith({
         where: { idempotencyKey: 'exame-123456789' },
       });
@@ -117,7 +128,9 @@ describe('CreateExameUseCase', () => {
       exameRepository.save.mockRejectedValue(new Error('Database error'));
 
       // Act & Assert
-      await expect(useCase.execute(mockCreateExameDto)).rejects.toThrow('Database error');
+      await expect(useCase.execute(mockCreateExameDto)).rejects.toThrow(
+        'Database error',
+      );
     });
 
     it('should convert date string to Date object', async () => {
@@ -131,9 +144,11 @@ describe('CreateExameUseCase', () => {
       await useCase.execute(mockCreateExameDto);
 
       // Assert
-      expect(exameRepository.create).toHaveBeenCalledWith(expect.objectContaining({
-        data_exame: expect.any(Date),
-      }));
+      expect(exameRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data_exame: expect.any(Date),
+        }),
+      );
     });
 
     it('should validate modalidade', async () => {
@@ -146,7 +161,9 @@ describe('CreateExameUseCase', () => {
       pacientesService.findOne.mockResolvedValue({ id: 'patient-uuid' } as any);
 
       // Act & Assert
-      await expect(useCase.execute(invalidDto)).rejects.toThrow(BadRequestException);
+      await expect(useCase.execute(invalidDto)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

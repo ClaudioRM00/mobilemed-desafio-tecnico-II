@@ -1,10 +1,20 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ExamesService } from './exames.service';
 import { Exame, Modalidade } from './entities/exame.entity';
 import { PacientesService } from '../pacientes/pacientes.service';
 import { NotFoundException } from '@nestjs/common';
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 
 describe('ExamesService', () => {
   let service: ExamesService;
@@ -69,7 +79,7 @@ describe('ExamesService', () => {
       const mockQueryBuilder: any = {
         skip: jest.fn().mockReturnThis(),
         take: jest.fn().mockReturnThis(),
-        // @ts-expect-error
+        // @ts-expect-error: Mocking query builder for test purposes
         getManyAndCount: jest.fn().mockResolvedValue([mockExams, 1]),
       };
       mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
@@ -83,7 +93,7 @@ describe('ExamesService', () => {
       const mockQueryBuilder: any = {
         skip: jest.fn().mockReturnThis(),
         take: jest.fn().mockReturnThis(),
-        // @ts-expect-error
+        // @ts-expect-error: Mocking query builder for test purposes
         getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
       };
       mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
@@ -220,11 +230,17 @@ describe('ExamesService', () => {
         idempotencyKey: 'unique-key-123',
       };
 
-      mockPacientesService.findOne.mockRejectedValue(new Error('Paciente não encontrado'));
+      mockPacientesService.findOne.mockRejectedValue(
+        new Error('Paciente não encontrado'),
+      );
       mockRepository.findOne.mockResolvedValue(null); // garantir que não existe exame com idempotencyKey
 
-      await expect(service.create(createExameDto)).rejects.toThrow('Paciente não encontrado');
-      expect(mockPacientesService.findOne).toHaveBeenCalledWith('non-existent-patient');
+      await expect(service.create(createExameDto)).rejects.toThrow(
+        'Paciente não encontrado',
+      );
+      expect(mockPacientesService.findOne).toHaveBeenCalledWith(
+        'non-existent-patient',
+      );
     });
 
     it('should return existing exam when idempotencyKey already exists', async () => {
@@ -276,15 +292,21 @@ describe('ExamesService', () => {
       const result = await service.update('test-id', updateExameDto);
 
       expect(result).toEqual(updatedExame);
-      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 'test-id' } });
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'test-id' },
+      });
       expect(mockRepository.save).toHaveBeenCalledWith(updatedExame);
     });
 
     it('should throw NotFoundException when exam not found during update', async () => {
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.update('non-existent-id', {})).rejects.toThrow(NotFoundException);
-      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 'non-existent-id' } });
+      await expect(service.update('non-existent-id', {})).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'non-existent-id' },
+      });
     });
   });
 
@@ -303,15 +325,21 @@ describe('ExamesService', () => {
 
       await service.remove('test-id');
 
-      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 'test-id' } });
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'test-id' },
+      });
       expect(mockRepository.remove).toHaveBeenCalledWith(mockExame);
     });
 
     it('should throw NotFoundException when exam not found during removal', async () => {
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.remove('non-existent-id')).rejects.toThrow(NotFoundException);
-      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 'non-existent-id' } });
+      await expect(service.remove('non-existent-id')).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'non-existent-id' },
+      });
     });
   });
 });

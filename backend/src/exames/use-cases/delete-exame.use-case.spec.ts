@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -32,7 +33,9 @@ describe('DeleteExameUseCase', () => {
     }).compile();
 
     useCase = module.get<DeleteExameUseCase>(DeleteExameUseCase);
-    exameRepository = module.get<Repository<Exame>>(getRepositoryToken(Exame)) as jest.Mocked<Repository<Exame>>;
+    exameRepository = module.get<Repository<Exame>>(
+      getRepositoryToken(Exame),
+    ) as jest.Mocked<Repository<Exame>>;
   });
 
   it('should be defined', () => {
@@ -46,15 +49,21 @@ describe('DeleteExameUseCase', () => {
 
       await useCase.execute('test-id');
 
-      expect(exameRepository.findOne).toHaveBeenCalledWith({ where: { id: 'test-id' } });
+      expect(exameRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'test-id' },
+      });
       expect(exameRepository.remove).toHaveBeenCalledWith(mockExame);
     });
 
     it('should throw NotFoundException when exam does not exist', async () => {
       exameRepository.findOne.mockResolvedValue(null);
 
-      await expect(useCase.execute('non-existent-id')).rejects.toThrow(NotFoundException);
-      expect(exameRepository.findOne).toHaveBeenCalledWith({ where: { id: 'non-existent-id' } });
+      await expect(useCase.execute('non-existent-id')).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(exameRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'non-existent-id' },
+      });
       expect(exameRepository.remove).not.toHaveBeenCalled();
     });
 
@@ -62,7 +71,9 @@ describe('DeleteExameUseCase', () => {
       exameRepository.findOne.mockResolvedValue(mockExame);
       exameRepository.remove.mockRejectedValue(new Error('Database error'));
 
-      await expect(useCase.execute('test-id')).rejects.toThrow('Database error');
+      await expect(useCase.execute('test-id')).rejects.toThrow(
+        'Database error',
+      );
     });
   });
 });

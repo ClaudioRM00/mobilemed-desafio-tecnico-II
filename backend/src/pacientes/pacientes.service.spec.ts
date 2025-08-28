@@ -189,7 +189,9 @@ describe('PacientesService', () => {
 
       mockRepository.save.mockRejectedValue(new Error('Duplicate entry'));
 
-      await expect(service.create(createPacienteDto)).rejects.toThrow('Duplicate entry');
+      await expect(service.create(createPacienteDto)).rejects.toThrow(
+        'Duplicate entry',
+      );
     });
   });
 
@@ -228,9 +230,9 @@ describe('PacientesService', () => {
 
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.update('non-existent-uuid', updatePacienteDto)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.update('non-existent-uuid', updatePacienteDto),
+      ).rejects.toThrow(NotFoundException);
       expect(mockRepository.save).not.toHaveBeenCalled();
     });
   });
@@ -252,14 +254,18 @@ describe('PacientesService', () => {
 
       await service.remove('paciente-uuid');
 
-      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 'paciente-uuid' } });
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'paciente-uuid' },
+      });
       expect(mockRepository.remove).toHaveBeenCalledWith(mockPaciente);
     });
 
     it('should throw NotFoundException when patient does not exist', async () => {
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.remove('non-existent-uuid')).rejects.toThrow(NotFoundException);
+      await expect(service.remove('non-existent-uuid')).rejects.toThrow(
+        NotFoundException,
+      );
       expect(mockRepository.remove).not.toHaveBeenCalled();
     });
   });

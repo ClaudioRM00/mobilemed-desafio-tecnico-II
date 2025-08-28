@@ -109,7 +109,9 @@ describe('ExamesController', () => {
       const result = await controller.create(createExameDto);
 
       expect(result).toEqual(mockExame);
-      expect(mockCreateExameUseCase.execute).toHaveBeenCalledWith(createExameDto);
+      expect(mockCreateExameUseCase.execute).toHaveBeenCalledWith(
+        createExameDto,
+      );
     });
 
     it('should return existing exam when reusing same idempotencyKey (HTTP 200)', async () => {
@@ -119,7 +121,9 @@ describe('ExamesController', () => {
       const result = await controller.create(createExameDto);
 
       expect(result).toEqual(existingExame);
-      expect(mockCreateExameUseCase.execute).toHaveBeenCalledWith(createExameDto);
+      expect(mockCreateExameUseCase.execute).toHaveBeenCalledWith(
+        createExameDto,
+      );
     });
 
     it('should throw BadRequestException when patient does not exist', async () => {
@@ -194,7 +198,10 @@ describe('ExamesController', () => {
       const result = await controller.findAll({});
 
       expect(result).toEqual(mockPaginatedResponse);
-      expect(mockExamesService.findAll).toHaveBeenCalledWith(undefined, undefined);
+      expect(mockExamesService.findAll).toHaveBeenCalledWith(
+        undefined,
+        undefined,
+      );
     });
   });
 
@@ -315,7 +322,9 @@ describe('ExamesController', () => {
       const result = await controller.findByPatientId('patient-uuid');
 
       expect(result).toEqual(mockExams);
-      expect(mockExamesService.findByPatientId).toHaveBeenCalledWith('patient-uuid');
+      expect(mockExamesService.findByPatientId).toHaveBeenCalledWith(
+        'patient-uuid',
+      );
     });
 
     it('should return empty array when no exams found for patient', async () => {
@@ -324,7 +333,9 @@ describe('ExamesController', () => {
       const result = await controller.findByPatientId('patient-uuid');
 
       expect(result).toEqual([]);
-      expect(mockExamesService.findByPatientId).toHaveBeenCalledWith('patient-uuid');
+      expect(mockExamesService.findByPatientId).toHaveBeenCalledWith(
+        'patient-uuid',
+      );
     });
   });
 });

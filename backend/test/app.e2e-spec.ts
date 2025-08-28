@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
@@ -84,25 +88,25 @@ describe('AppController (e2e)', () => {
       };
 
       // Send multiple concurrent requests
-      const promises = Array(5).fill(null).map(() =>
-        request(app.getHttpServer())
-          .post('/exames')
-          .send(examData)
-      );
+      const promises = Array(5)
+        .fill(null)
+        .map(() => request(app.getHttpServer()).post('/exames').send(examData));
 
       const responses = await Promise.all(promises);
 
       // All responses should have the same status (either 201 or 200)
-      const statusCodes = responses.map(r => r.status);
-      expect(statusCodes.every(code => code === 201 || code === 200)).toBe(true);
+      const statusCodes = responses.map((r) => r.status);
+      expect(statusCodes.every((code) => code === 201 || code === 200)).toBe(
+        true,
+      );
 
       // All successful responses should have the same exam ID
       const examIds = responses
-        .filter(r => r.status === 200 || r.status === 201)
-        .map(r => r.body.id);
-      
+        .filter((r) => r.status === 200 || r.status === 201)
+        .map((r) => r.body.id);
+
       if (examIds.length > 0) {
-        expect(examIds.every(id => id === examIds[0])).toBe(true);
+        expect(examIds.every((id) => id === examIds[0])).toBe(true);
       }
     });
   });

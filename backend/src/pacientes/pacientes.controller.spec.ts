@@ -94,7 +94,9 @@ describe('PacientesController', () => {
       expect(result.id).toBeDefined();
       expect(result.nome).toBe(createPacienteDto.nome);
       expect(result.status).toBe(Status.Ativo);
-      expect(mockCreatePacienteUseCase.execute).toHaveBeenCalledWith(createPacienteDto);
+      expect(mockCreatePacienteUseCase.execute).toHaveBeenCalledWith(
+        createPacienteDto,
+      );
     });
 
     it('should throw ConflictException when CPF already exists', async () => {
@@ -169,7 +171,10 @@ describe('PacientesController', () => {
       const result = await controller.findAll({});
 
       expect(result).toEqual(mockPaginatedResponse);
-      expect(mockPacientesService.findAll).toHaveBeenCalledWith(undefined, undefined);
+      expect(mockPacientesService.findAll).toHaveBeenCalledWith(
+        undefined,
+        undefined,
+      );
     });
   });
 
@@ -273,7 +278,9 @@ describe('PacientesController', () => {
         new NotFoundException('Paciente não encontrado'),
       );
 
-      await expect(controller.remove('non-existent-id')).rejects.toThrow(NotFoundException);
+      await expect(controller.remove('non-existent-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });
