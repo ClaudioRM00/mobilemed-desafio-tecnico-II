@@ -5,6 +5,7 @@ import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { PacientesService, PacienteDto } from '../../../services/pacientes';
+import { NotificationService } from '../../../core/notification.service';
 
 @Component({
   selector: 'app-paciente-form',
@@ -28,6 +29,7 @@ export class PacienteForm implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private pacientesService: PacientesService,
+    private notificationService: NotificationService,
     private router: Router,
     private route: ActivatedRoute
   ) {
@@ -90,11 +92,18 @@ export class PacienteForm implements OnInit, OnDestroy {
             endereco: paciente.endereco,
             status: paciente.status
           });
+          
+          // Desabilitar o campo CPF no modo de edição
+          if (this.isEditMode) {
+            this.form.get('documento_cpf')?.disable();
+          }
+          
           this.loading = false;
         },
         error: (error: any) => {
-          this.error = error.message || 'Erro ao carregar paciente';
+          this.error = 'Erro ao carregar paciente';
           this.loading = false;
+          this.notificationService.erroCarregamentoPaciente();
         }
       });
   }
@@ -135,11 +144,13 @@ export class PacienteForm implements OnInit, OnDestroy {
         .subscribe({
           next: () => {
             this.submitting = false;
+            this.notificationService.pacienteAtualizadoComSucesso();
             this.router.navigate(['/pacientes']);
           },
           error: (error: any) => {
             this.submitting = false;
-            this.error = error.message || 'Erro ao atualizar paciente';
+            this.error = 'Erro ao atualizar paciente';
+            this.notificationService.erroAtualizacaoPaciente();
           }
         });
     } else {
@@ -148,11 +159,13 @@ export class PacienteForm implements OnInit, OnDestroy {
         .subscribe({
           next: () => {
             this.submitting = false;
+            this.notificationService.pacienteCadastradoComSucesso();
             this.router.navigate(['/pacientes']);
           },
           error: (error: any) => {
             this.submitting = false;
-            this.error = error.message || 'Erro ao cadastrar paciente';
+            this.error = 'Erro ao cadastrar paciente';
+            this.notificationService.erroCadastroPaciente();
           }
         });
     }

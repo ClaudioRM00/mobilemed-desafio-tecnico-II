@@ -1,44 +1,47 @@
 import { TestBed } from '@angular/core/testing';
 import { NotificationService } from './notification.service';
+import { ToastService } from './toast.service';
 
 describe('NotificationService', () => {
   let service: NotificationService;
+  let toastService: jasmine.SpyObj<ToastService>;
 
   beforeEach(() => {
-    // Spy on console methods
-    spyOn(console, 'log').and.stub();
-    spyOn(console, 'warn').and.stub();
-    spyOn(console, 'error').and.stub();
+    const toastServiceSpy = jasmine.createSpyObj('ToastService', ['success', 'warning', 'error', 'info']);
     
     TestBed.configureTestingModule({
-      providers: [NotificationService],
+      providers: [
+        NotificationService,
+        { provide: ToastService, useValue: toastServiceSpy }
+      ],
     });
     service = TestBed.inject(NotificationService);
+    toastService = TestBed.inject(ToastService) as jasmine.SpyObj<ToastService>;
   });
 
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should call console.log with success message', () => {
+  it('should call toastService.success with success message', () => {
     const message = 'Operation completed successfully';
     service.success(message);
     
-    expect(console.log).toHaveBeenCalledWith('SUCCESS:', message);
+    expect(toastService.success).toHaveBeenCalledWith('Sucesso!', message);
   });
 
-  it('should call console.warn with warning message', () => {
+  it('should call toastService.warning with warning message', () => {
     const message = 'Warning: Resource not found';
     service.warn(message);
     
-    expect(console.warn).toHaveBeenCalledWith('WARN:', message);
+    expect(toastService.warning).toHaveBeenCalledWith('Atenção!', message);
   });
 
-  it('should call console.error with error message', () => {
+  it('should call toastService.error with error message', () => {
     const message = 'Error: Something went wrong';
     service.error(message);
     
-    expect(console.error).toHaveBeenCalledWith('ERROR:', message);
+    expect(toastService.error).toHaveBeenCalledWith('Erro!', message);
   });
 
   it('should handle empty messages', () => {
@@ -46,9 +49,9 @@ describe('NotificationService', () => {
     service.warn('');
     service.error('');
     
-    expect(console.log).toHaveBeenCalledWith('SUCCESS:', '');
-    expect(console.warn).toHaveBeenCalledWith('WARN:', '');
-    expect(console.error).toHaveBeenCalledWith('ERROR:', '');
+    expect(toastService.success).toHaveBeenCalledWith('Sucesso!', '');
+    expect(toastService.warning).toHaveBeenCalledWith('Atenção!', '');
+    expect(toastService.error).toHaveBeenCalledWith('Erro!', '');
   });
 
   it('should handle special characters in messages', () => {
@@ -57,9 +60,9 @@ describe('NotificationService', () => {
     service.warn(message);
     service.error(message);
     
-    expect(console.log).toHaveBeenCalledWith('SUCCESS:', message);
-    expect(console.warn).toHaveBeenCalledWith('WARN:', message);
-    expect(console.error).toHaveBeenCalledWith('ERROR:', message);
+    expect(toastService.success).toHaveBeenCalledWith('Sucesso!', message);
+    expect(toastService.warning).toHaveBeenCalledWith('Atenção!', message);
+    expect(toastService.error).toHaveBeenCalledWith('Erro!', message);
   });
 
   it('should handle multiple calls', () => {
@@ -68,8 +71,8 @@ describe('NotificationService', () => {
     service.error('Third message');
     service.success('Fourth message');
     
-    expect(console.log).toHaveBeenCalledTimes(2);
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(toastService.success).toHaveBeenCalledTimes(2);
+    expect(toastService.warning).toHaveBeenCalledTimes(1);
+    expect(toastService.error).toHaveBeenCalledTimes(1);
   });
 });
