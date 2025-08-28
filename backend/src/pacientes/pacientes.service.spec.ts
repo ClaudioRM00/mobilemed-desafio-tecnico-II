@@ -1,10 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { PacientesService } from './pacientes.service';
-import { Paciente, Sexo, Status } from './entities/paciente.entity';
-import { CreatePacienteDto } from './dto/create-paciente.dto';
-import { UpdatePacienteDto } from './dto/update-paciente.dto';
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { Paciente, Sexo } from './entities/paciente.entity';
+import { NotFoundException } from '@nestjs/common';
 
 describe('PacientesService', () => {
   let service: PacientesService;

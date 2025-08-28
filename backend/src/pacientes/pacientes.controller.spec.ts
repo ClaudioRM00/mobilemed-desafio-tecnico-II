@@ -11,9 +11,6 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 
 describe('PacientesController', () => {
   let controller: PacientesController;
-  let pacientesService: PacientesService;
-  let createPacienteUseCase: CreatePacienteUseCase;
-  let updatePacienteUseCase: UpdatePacienteUseCase;
 
   const mockPacientesService = {
     findAll: jest.fn(),
@@ -62,9 +59,6 @@ describe('PacientesController', () => {
     }).compile();
 
     controller = module.get<PacientesController>(PacientesController);
-    pacientesService = module.get<PacientesService>(PacientesService);
-    createPacienteUseCase = module.get<CreatePacienteUseCase>(CreatePacienteUseCase);
-    updatePacienteUseCase = module.get<UpdatePacienteUseCase>(UpdatePacienteUseCase);
   });
 
   afterEach(() => {

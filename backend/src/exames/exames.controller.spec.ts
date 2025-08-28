@@ -14,10 +14,6 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('ExamesController', () => {
   let controller: ExamesController;
-  let examesService: ExamesService;
-  let createExameUseCase: CreateExameUseCase;
-  let updateExameUseCase: UpdateExameUseCase;
-  let deleteExameUseCase: DeleteExameUseCase;
 
   const mockExamesService = {
     findAll: jest.fn(),
@@ -86,10 +82,6 @@ describe('ExamesController', () => {
     }).compile();
 
     controller = module.get<ExamesController>(ExamesController);
-    examesService = module.get<ExamesService>(ExamesService);
-    createExameUseCase = module.get<CreateExameUseCase>(CreateExameUseCase);
-    updateExameUseCase = module.get<UpdateExameUseCase>(UpdateExameUseCase);
-    deleteExameUseCase = module.get<DeleteExameUseCase>(DeleteExameUseCase);
   });
 
   afterEach(() => {
