@@ -1,128 +1,187 @@
-📝 **Task: Cadastro de Pacientes e Exames Médicos com Modalidades DICOM**
+# MobileMed - Desafio Técnico II
 
-🎯 **Descrição**
+Sistema de gerenciamento de pacientes e exames médicos com backend em NestJS e frontend em Angular.
 
-Como usuário da plataforma médica,  
-Quero registrar e consultar pacientes e seus exames de forma segura, consistente e com boa experiência de navegação,  
-Para que eu tenha controle sobre o histórico clínico mesmo em situações de reenvio de requisição ou acessos simultâneos.
+## 🚀 Como Executar
 
-⸻
+### Pré-requisitos
+- Docker e Docker Compose instalados
+- Portas 3000, 4200, 5433 e 8080 disponíveis
 
-🔧 **Escopo da Task**
+### Execução Rápida
+```bash
+# Clone o repositório
+git clone <repository-url>
+cd mobilemed-desafio-tecnico-II
 
-- Implementar endpoints REST para cadastro e consulta de pacientes e exames.
-- Garantir idempotência no cadastro de exames.
-- Criar estrutura segura para suportar requisições concorrentes.
-- Implementar paginação para consultas.
-- Integrar com front-end Angular.
-- Criar componentes Angular para cadastro e listagem de pacientes e exames.
-- Utilizar práticas RESTful, transações ACID e código modular.
+# Execute o projeto
+docker compose up --build
+```
 
-⸻
+### Acessos
+- **Frontend**: http://localhost:4200
+- **Backend API**: http://localhost:3000
+- **Swagger Documentation**: http://localhost:3000/swagger
+- **PgAdmin**: http://localhost:8080
+  - Email: admin@mobilemed.com
+  - Senha: admin123
+- **PostgreSQL**: localhost:5433
+  - Database: mobilemed_db
+  - Username: postgres
+  - Password: password
 
-✅ **Regras de Validações**
+## 🏗️ Arquitetura
 
-- O `documento` do paciente deve ser único.
-- A `idempotencyKey` do exame deve garantir que requisições duplicadas não criem múltiplos registros.
-- Não é permitido cadastrar exame para paciente inexistente.
-- Campos obrigatórios devem ser validados (nome, data de nascimento, modalidade, etc).
+### Backend (NestJS)
+- **Porta**: 3000
+- **Framework**: NestJS com TypeScript
+- **Banco**: PostgreSQL com TypeORM
+- **Documentação**: Swagger/OpenAPI
 
-⸻
+### Frontend (Angular)
+- **Porta**: 4200
+- **Framework**: Angular 20
+- **UI**: Angular Material + Tailwind CSS
+- **Proxy**: Configurado para API
 
-📦 **Saída Esperada**
+### Banco de Dados
+- **Porta**: 5433
+- **Sistema**: PostgreSQL 15
+- **Dados**: Seed automático com 5 pacientes e 10 exames
 
-- Endpoints criados:
-  - `POST /pacientes`
-  - `GET /pacientes?page=x&pageSize=y`
-  - `POST /exames`
-  - `GET /exames?page=x&pageSize=y`
-- Dados persistidos de forma segura e idempotente.
-- Front-end com:
-  - Listagem paginada de pacientes e exames.
-  - Cadastro funcional via formulários.
-  - UI amigável com mensagens de erro e loading.
+## 📋 Funcionalidades
 
-⸻
+### Pacientes
+- Listagem de pacientes
+- Cadastro de novos pacientes
+- Edição de dados
+- Exclusão de pacientes
 
-🔥 **Critérios de Aceite**
+### Exames
+- Listagem de exames
+- Cadastro de novos exames
+- Edição de dados
+- Exclusão de exames
+- Filtros por modalidade
 
-- **Dado** que um paciente válido foi cadastrado,  
-  **Quando** for enviado um novo exame com `idempotencyKey` única,  
-  **Então** o exame deverá ser criado com sucesso.
+## 🔧 Comandos Úteis
 
-- **Dado** que um exame com `idempotencyKey` já existe,  
-  **Quando** for enviada uma nova requisição com os mesmos dados,  
-  **Então** o sistema deverá retornar HTTP 200 com o mesmo exame, sem recriá-lo.
+```bash
+# Iniciar todos os serviços
+docker compose up
 
-- **Dado** que múltiplas requisições simultâneas com mesma `idempotencyKey` são feitas,  
-  **Quando** processadas,  
-  **Então** apenas um exame deverá ser persistido.
+# Iniciar em background
+docker compose up -d
 
-- **Dado** que o front-end está carregando dados,  
-  **Quando** houver erro de rede,  
-  **Então** deve ser exibida mensagem de erro com botão "Tentar novamente".
+# Parar todos os serviços
+docker compose down
 
-⸻
+# Reconstruir imagens
+docker compose up --build
 
-👥 **Dependências**
+# Ver logs
+docker compose logs backend
+docker compose logs frontend
 
-- Banco de dados com suporte a transações (PostgreSQL, MySQL ou similar).
-- Integração REST entre backend (Node.js/NestJS ou similar) e frontend (Angular).
-- Validação de campos no front-end e back-end.
-- Definição do enum de modalidades DICOM:
-  - `CR, CT, DX, MG, MR, NM, OT, PT, RF, US, XA`
+# Acessar container
+docker compose exec backend sh
+docker compose exec postgres psql -U postgres -d mobilemed_db
+```
 
-⸻
+## 🐛 Troubleshooting
 
-🧪 **Cenários de Teste**
+### Problemas Comuns
 
-| Cenário | Descrição | Resultado Esperado |
-|--------|-----------|--------------------|
-| 1 | Criar paciente com dados válidos | Paciente salvo com UUID único |
-| 2 | Criar paciente com CPF já existente | Erro de validação 409 - duplicidade |
-| 3 | Criar exame com paciente existente e idempotencyKey nova | HTTP 201 e exame salvo |
-| 4 | Reenviar exame com mesma idempotencyKey | HTTP 200 e retorno do mesmo exame |
-| 5 | Enviar múltiplas requisições simultâneas com mesma idempotencyKey | Apenas um exame persistido |
-| 6 | Criar exame com paciente inexistente | Erro 400 - paciente não encontrado |
-| 7 | Listar exames com paginação (10 por página) | Retorno paginado corretamente |
-| 8 | Listar pacientes com paginação | Lista retornada corretamente |
-| 9 | Frontend mostra loading durante chamada | Spinner visível enquanto carrega |
-| 10 | Frontend exibe erro de rede e botão “Tentar novamente” | Mensagem visível e reenvio possível |
-| 11 | Enviar exame com modalidade inválida | Erro 400 - enum inválido |
-| 12 | Validação visual dos campos obrigatórios no formulário | Campos com feedback de erro |
-| 13 | Cobertura mínima de 80% nos testes unitários e integração | Relatório de cobertura válido |
+1. **Porta já em uso**
+   ```bash
+   # Verificar processos usando as portas
+   netstat -ano | findstr :3000
+   netstat -ano | findstr :4200
+   ```
 
-⸻
+2. **Erro de conexão com banco**
+   ```bash
+   # Aguardar inicialização do PostgreSQL
+   docker compose logs postgres
+   ```
 
-🧪 **Testes de Integração (Requisito Obrigatório)**
+3. **Build falha**
+   ```bash
+   # Limpar cache e reconstruir
+   docker system prune -f
+   docker compose up --build
+   ```
 
-- Devem ser implementados utilizando ferramentas como:
-  - `Supertest` ou `jest` com `NestJS TestingModule` (backend)
-  - `TestBed`, `HttpClientTestingModule` (frontend Angular)
-- Devem cobrir pelo menos:
-  - Fluxo de criação completo (Paciente → Exame)
-  - Validações de regra de negócio
-  - Idempotência em requisições simultâneas
-  - Respostas corretas de erro
-  - Listagem paginada
+## 📁 Estrutura do Projeto
 
-⸻
+```
+mobilemed-desafio-tecnico-II/
+├── backend/                 # API NestJS
+│   ├── src/
+│   │   ├── pacientes/      # Módulo de pacientes
+│   │   ├── exames/         # Módulo de exames
+│   │   ├── config/         # Configurações
+│   │   └── database/       # Migrações e seeds
+│   ├── Dockerfile
+│   └── package.json
+├── frontend/               # Aplicação Angular
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── features/   # Módulos de features
+│   │   │   ├── shared/     # Componentes compartilhados
+│   │   │   └── services/   # Serviços
+│   │   └── styles/
+│   ├── Dockerfile
+│   └── package.json
+└── docker-compose.yml      # Orquestração
+```
 
-✨ **Bônus para Diferenciação Técnica**
+## 🔒 Variáveis de Ambiente
 
-Os itens a seguir não são obrigatórios, mas serão **altamente valorizados**:
+### Backend
+```env
+DB_HOST=postgres
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=password
+DB_DATABASE=mobilemed_db
+DB_SCHEMA=public
+NODE_ENV=development
+PORT=3000
+```
 
-- 🐳 **Uso de Docker** para orquestração local:
-  - Arquivo `docker-compose.yml` com banco e backend
-  - Script de inicialização da aplicação
-- 📜 **Integração com Swagger / OpenAPI**:
-  - Documentação dos endpoints RESTful
-  - Disponível via `/api/docs` ou equivalente
-- ⚙️ **Pipeline CI Básico com GitHub Actions**:
-  - Rodar testes automatizados
-  - Validar lint ou build
-- 📚 **Documentação Técnica**:
-  - `README.md` com instruções para rodar o projeto localmente
-  - Scripts de setup e uso da API
-  - Seções com decisões de arquitetura
+## 📝 API Endpoints
 
+### Pacientes
+- `GET /pacientes` - Listar pacientes
+- `POST /pacientes` - Criar paciente
+- `GET /pacientes/:id` - Buscar paciente
+- `PUT /pacientes/:id` - Atualizar paciente
+- `DELETE /pacientes/:id` - Excluir paciente
+
+### Exames
+- `GET /exames` - Listar exames
+- `POST /exames` - Criar exame
+- `GET /exames/:id` - Buscar exame
+- `PUT /exames/:id` - Atualizar exame
+- `DELETE /exames/:id` - Excluir exame
+
+## 🎯 Status do Projeto
+
+✅ **Funcionalidades Implementadas**
+- [x] CRUD de Pacientes
+- [x] CRUD de Exames
+- [x] API REST com Swagger
+- [x] Frontend Angular responsivo
+- [x] Banco PostgreSQL com TypeORM
+- [x] Docker Compose completo
+- [x] Seeds automáticos
+- [x] Health checks
+- [x] Documentação
+
+## 📞 Suporte
+
+Para dúvidas ou problemas, consulte:
+1. Logs dos containers: `docker compose logs`
+2. Documentação Swagger: http://localhost:3000/swagger
+3. Issues do repositório

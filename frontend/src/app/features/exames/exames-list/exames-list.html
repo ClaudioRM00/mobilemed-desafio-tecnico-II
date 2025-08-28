@@ -1,0 +1,326 @@
+
+
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-medical-900">Gestão de Exames</h1>
+      <p class="text-medical-600 mt-1">Cadastre e gerencie exames do sistema médico</p>
+    </div>
+    <a
+      routerLink="/exames/novo"
+      class="btn-primary flex items-center gap-2"
+    >
+      <svg
+        class="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M12 4.5v15m7.5-7.5h-15"
+        />
+      </svg>
+      Novo Exame
+    </a>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="flex justify-center py-12">
+    <div class="flex items-center gap-3">
+      <svg
+        class="animate-spin h-8 w-8 text-primary-500"
+        viewBox="0 0 50 50"
+      >
+        <circle
+          class="opacity-30"
+          cx="25"
+          cy="25"
+          r="20"
+          stroke="currentColor"
+          stroke-width="5"
+          fill="none"
+        />
+        <circle
+          class="text-primary-600"
+          cx="25"
+          cy="25"
+          r="20"
+          stroke="currentColor"
+          stroke-width="5"
+          fill="none"
+          stroke-dasharray="100"
+          stroke-dashoffset="75"
+        />
+      </svg>
+      <span class="text-medical-600">Carregando exames...</span>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div
+    *ngIf="error && !loading"
+    class="bg-danger-50 border border-danger-200 rounded-lg p-4"
+  >
+    <div class="flex items-center gap-3">
+      <svg
+        class="w-5 h-5 text-danger-500"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+        />
+      </svg>
+      <div>
+        <h3 class="text-sm font-medium text-danger-800">
+          Erro ao carregar exames
+        </h3>
+        <p class="text-sm text-danger-700 mt-1">{{ error }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exames Table -->
+  <div
+    *ngIf="!loading && !error"
+    class="bg-white shadow-card rounded-lg border border-medical-200"
+  >
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-semibold text-medical-900">
+          {{ paginatedData?.meta?.total || 0 }} exame(s) encontrado(s)
+        </h3>
+      </div>
+
+      <!-- Table -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-medical-200">
+          <thead class="bg-medical-50">
+            <tr>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-medical-500 uppercase tracking-wider"
+              >
+                Exame
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-medical-500 uppercase tracking-wider"
+              >
+                Modalidade
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-medical-500 uppercase tracking-wider"
+              >
+                Nome Paciente
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-medical-500 uppercase tracking-wider"
+              >
+                Data
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-medical-500 uppercase tracking-wider"
+              >
+                Ações
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-medical-200">
+            <tr
+              *ngFor="let exame of paginatedData?.data"
+              class="hover:bg-medical-50"
+            >
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div
+                    class="h-10 w-10 rounded-full bg-primary-500 flex items-center justify-center"
+                  >
+                    <span class="text-sm font-medium text-white">
+                      {{ getInitials(exame.nome_exame) }}
+                    </span>
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-medical-900">
+                      {{ exame.nome_exame }}
+                    </div>
+                    <div class="text-sm text-medical-500">
+                      {{ exame.modalidade }}
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td
+                class="px-6 py-4 whitespace-nowrap text-sm text-medical-900"
+              >
+                {{ getModalidadeLabel(exame.modalidade) }}
+              </td>
+              <td
+                class="px-6 py-4 whitespace-nowrap text-sm text-medical-900"
+              >
+                <div class="flex items-center">
+                  <span *ngIf="pacientesLoading[exame.id_paciente]" class="text-medical-500">
+                    <svg class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Carregando...
+                  </span>
+                  <div *ngIf="!pacientesLoading[exame.id_paciente]" class="flex flex-col">
+                    <span class="font-medium">{{ getPacienteNome(exame.id_paciente) }}</span>
+                    <span *ngIf="getPacienteStatus(exame.id_paciente)" 
+                          [class]="getPacienteStatus(exame.id_paciente) === 'Ativo' ? 'text-green-600' : 'text-red-600'"
+                          class="text-xs">
+                      {{ getPacienteStatus(exame.id_paciente) }}
+                    </span>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="px-2 py-1 text-xs font-medium rounded-full bg-medical-100 text-medical-800">
+                  {{ formatDate(exame.data_exame) }}
+                </span>
+              </td>
+              <td
+                class="px-6 py-4 whitespace-nowrap text-sm font-medium"
+              >
+                <a
+                  [routerLink]="['/exames', exame.id, 'editar']"
+                  class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200"
+                >
+                  <svg
+                    class="w-4 h-4 mr-1"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+                    />
+                  </svg>
+                  Editar
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty State -->
+      <div
+        *ngIf="paginatedData && paginatedData.data.length === 0"
+        class="text-center py-12"
+      >
+        <svg
+          class="mx-auto h-12 w-12 text-medical-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
+          />
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-medical-900">
+          Nenhum exame encontrado
+        </h3>
+        <p class="mt-1 text-sm text-medical-500">
+          Comece cadastrando o primeiro exame.
+        </p>
+        <div class="mt-6">
+          <a
+            routerLink="/exames/novo"
+            class="btn-primary"
+          >
+            Cadastrar Exame
+          </a>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div
+        *ngIf="paginatedData && paginatedData.meta.totalPages > 1"
+        class="flex items-center justify-between border-t border-medical-200 pt-6 mt-6"
+      >
+        <div class="flex-1 flex justify-between sm:hidden">
+          <button
+            (click)="previousPage()"
+            [disabled]="paginatedData.meta.page === 1"
+            class="btn-secondary"
+          >
+            Anterior
+          </button>
+          <button
+            (click)="nextPage()"
+            [disabled]="paginatedData.meta.page === paginatedData.meta.totalPages"
+            class="btn-secondary"
+          >
+            Próximo
+          </button>
+        </div>
+        <div
+          class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between"
+        >
+          <div>
+            <p class="text-sm text-medical-700">
+              Mostrando
+              <span class="font-medium">{{
+                (paginatedData.meta.page - 1) * paginatedData.meta.pageSize + 1
+              }}</span>
+              até
+              <span class="font-medium">{{
+                Math.min(paginatedData.meta.page * paginatedData.meta.pageSize, paginatedData.meta.total)
+              }}</span>
+              de
+              <span class="font-medium">{{ paginatedData.meta.total }}</span>
+              resultados
+            </p>
+          </div>
+          <div>
+            <nav
+              class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+            >
+              <button
+                (click)="previousPage()"
+                [disabled]="paginatedData.meta.page === 1"
+                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-medical-300 bg-white text-sm font-medium text-medical-500 hover:bg-medical-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Anterior
+              </button>
+              <button
+                *ngFor="let page of getVisiblePages()"
+                (click)="goToPage(page)"
+                [class]="
+                  page === paginatedData.meta.page
+                    ? 'bg-primary-50 border-primary-500 text-primary-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium'
+                    : 'bg-white border-medical-300 text-medical-500 hover:bg-medical-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium'
+                "
+              >
+                {{ page }}
+              </button>
+              <button
+                (click)="nextPage()"
+                [disabled]="paginatedData.meta.page === paginatedData.meta.totalPages"
+                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-medical-300 bg-white text-sm font-medium text-medical-500 hover:bg-medical-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Próximo
+              </button>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

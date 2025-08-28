@@ -1,0 +1,32 @@
+// Estilos específicos para o formulário de exames
+// As classes principais estão definidas no styles.scss global
+
+// Garantir que o formulário tenha espaçamento adequado
+.exame-form-container {
+  @apply space-y-6;
+}
+
+// Estilos para campos específicos se necessário
+.idempotency-section {
+  @apply bg-medical-50 p-4 rounded-lg border border-medical-200;
+}
+
+// Garantir que os botões tenham o estilo correto
+.btn-generate {
+  @apply bg-medical-100 hover:bg-medical-200 text-medical-700 font-medium py-2 px-3 rounded-lg border border-medical-300 transition-colors duration-200;
+}
+
+// Estilos para mensagens de erro específicas
+.error-message {
+  @apply text-sm text-danger-600 mt-1;
+}
+
+// Estilos para labels específicos
+.field-label {
+  @apply block text-sm font-medium text-medical-700 mb-2;
+}
+
+// Estilos para campos de entrada específicos
+.field-input {
+  @apply block w-full rounded-lg border border-medical-300 px-3 py-2 text-medical-900 placeholder-medical-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500;
+}

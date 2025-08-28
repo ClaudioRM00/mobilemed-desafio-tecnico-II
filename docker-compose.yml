@@ -1,0 +1,102 @@
+# Removed version as it's obsolete in newer Docker Compose versions
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: mobilemed_postgres
+    environment:
+      POSTGRES_DB: mobilemed_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    # Expose Postgres on host port 5433 to avoid conflicts with local installations
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - mobilemed_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mobilemed_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: mobilemed_backend
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+      DB_DATABASE: mobilemed_db
+      DB_SCHEMA: public
+      NODE_ENV: development
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mobilemed_network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # One-shot container that seeds the database, then exits
+  seed:
+    build: ./backend      # reuse backend image (has code + deps)
+    container_name: mobilemed_seed
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+      DB_DATABASE: mobilemed_db
+      DB_SCHEMA: public
+      NODE_ENV: development
+    command: sh -c "npm run db:seed"
+    restart: "no"
+    networks:
+      - mobilemed_network
+
+  frontend:
+    build: ./frontend
+    container_name: mobilemed_frontend
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - mobilemed_network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: mobilemed_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@mobilemed.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+    networks:
+      - mobilemed_network
+
+volumes:
+  postgres_data:
+
+networks:
+  mobilemed_network:
+    driver: bridge
