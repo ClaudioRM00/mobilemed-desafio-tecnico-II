@@ -1,0 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  body {
+    font-feature-settings: 'cv01', 'cv02', 'cv03', 'cv04';
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+
+  .btn-secondary {
+    @apply bg-white hover:bg-medical-50 text-medical-700 font-medium py-2 px-4 rounded-lg border border-medical-300 transition-colors duration-200;
+  }
+
+  .card {
+    @apply bg-white shadow-card rounded-lg border border-medical-200;
+  }
+
+  .input-field {
+    @apply block w-full rounded-lg border border-medical-300 px-3 py-2 text-medical-900 placeholder-medical-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500;
+  }
+}
