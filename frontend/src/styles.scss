@@ -61,5 +61,13 @@ html, body {
 
   .input-field {
     @apply block w-full rounded-lg border border-medical-300 px-3 py-2 text-medical-900 placeholder-medical-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500;
+    
+    &:read-only {
+      @apply bg-medical-50 text-medical-600 cursor-not-allowed;
+    }
+    
+    &:disabled {
+      @apply bg-medical-50 text-medical-600 cursor-not-allowed;
+    }
   }
 }

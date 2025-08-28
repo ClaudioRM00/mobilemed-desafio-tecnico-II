@@ -7,6 +7,7 @@ import { takeUntil, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/o
 import { ExamesService, ExameDto } from '../../../services/exames';
 import { PacientesService, PacienteDto } from '../../../services/pacientes';
 import { MODALIDADES_LIST, getModalidadeLabel as getModalidadeLabelUtil, Modalidade } from '../../../shared/utils/modalidade.utils';
+import { NotificationService } from '../../../core/notification.service';
 
 @Component({
   selector: 'app-exame-form',
@@ -39,6 +40,7 @@ export class ExameForm implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private examesService: ExamesService,
     private pacientesService: PacientesService,
+    private notificationService: NotificationService,
     private router: Router,
     private route: ActivatedRoute
   ) {
@@ -122,8 +124,9 @@ export class ExameForm implements OnInit, OnDestroy {
           this.loading = false;
         },
         error: (error: any) => {
-          this.error = error.message || 'Erro ao carregar exame';
+          this.error = 'Erro ao carregar exame';
           this.loading = false;
+          this.notificationService.erroCarregamentoExame();
         }
       });
   }
@@ -191,11 +194,13 @@ export class ExameForm implements OnInit, OnDestroy {
         .subscribe({
           next: () => {
             this.submitting = false;
+            this.notificationService.exameAtualizadoComSucesso();
             this.router.navigate(['/exames']);
           },
           error: (error: any) => {
             this.submitting = false;
-            this.error = error.message || 'Erro ao atualizar exame';
+            this.error = 'Erro ao atualizar exame';
+            this.notificationService.erroAtualizacaoExame();
           }
         });
     } else {
@@ -204,11 +209,13 @@ export class ExameForm implements OnInit, OnDestroy {
         .subscribe({
           next: () => {
             this.submitting = false;
+            this.notificationService.exameCadastradoComSucesso();
             this.router.navigate(['/exames']);
           },
           error: (error: any) => {
             this.submitting = false;
-            this.error = error.message || 'Erro ao cadastrar exame';
+            this.error = 'Erro ao cadastrar exame';
+            this.notificationService.erroCadastroExame();
           }
         });
     }

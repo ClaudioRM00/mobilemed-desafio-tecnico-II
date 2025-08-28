@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Put,
+  Patch,
   Param,
   Query,
   Delete,
@@ -82,7 +83,7 @@ export class PacientesController {
     return this.pacientesService.findOne(id);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Atualizar um paciente' })
   @ApiParam({ name: 'id', description: 'ID do paciente' })
   @ApiResponse({
