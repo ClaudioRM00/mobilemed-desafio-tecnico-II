@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { of, throwError } from 'rxjs';
+import { of, throwError, Observable } from 'rxjs';
 import { ExameForm } from './exame-form';
 import { ExamesService } from '../../../services/exames';
 import { PacientesService } from '../../../services/pacientes';
@@ -211,8 +211,16 @@ describe('ExameForm', () => {
     expect(examesService.update).not.toHaveBeenCalled();
   });
 
-  it('should show loading state during submission', () => {
-    examesService.create.and.returnValue(of(mockExame));
+  it('should show loading state during submission', (done) => {
+    // Criar um observable que não resolve imediatamente
+    const delayedResponse = new Observable<typeof mockExame>(observer => {
+      setTimeout(() => {
+        observer.next(mockExame);
+        observer.complete();
+      }, 100);
+    });
+    
+    examesService.create.and.returnValue(delayedResponse);
 
     component.form.patchValue({
       nome_exame: 'Test Exam',
@@ -224,6 +232,13 @@ describe('ExameForm', () => {
 
     component.onSubmit();
 
+    // Verificar que submitting é true imediatamente após onSubmit
     expect(component.submitting).toBeTrue();
+
+    // Aguardar a conclusão da operação
+    setTimeout(() => {
+      expect(component.submitting).toBeFalse();
+      done();
+    }, 150);
   });
 });

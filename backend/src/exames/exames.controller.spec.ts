@@ -305,4 +305,34 @@ describe('ExamesController', () => {
       );
     });
   });
+
+  describe('findByPatientId', () => {
+    it('should return exams for a specific patient', async () => {
+      const mockExams = [
+        new Exame({
+          nome_exame: 'Ressonância Magnética',
+          modalidade: Modalidade.MR,
+          id_paciente: 'patient-uuid',
+          data_exame: new Date('2024-01-15'),
+          idempotencyKey: 'unique-key-123',
+        }),
+      ];
+
+      mockExamesService.findByPatientId.mockResolvedValue(mockExams);
+
+      const result = await controller.findByPatientId('patient-uuid');
+
+      expect(result).toEqual(mockExams);
+      expect(mockExamesService.findByPatientId).toHaveBeenCalledWith('patient-uuid');
+    });
+
+    it('should return empty array when no exams found for patient', async () => {
+      mockExamesService.findByPatientId.mockResolvedValue([]);
+
+      const result = await controller.findByPatientId('patient-uuid');
+
+      expect(result).toEqual([]);
+      expect(mockExamesService.findByPatientId).toHaveBeenCalledWith('patient-uuid');
+    });
+  });
 });

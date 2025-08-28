@@ -153,4 +153,116 @@ describe('PacientesService', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe('create', () => {
+    it('should create a new patient successfully', async () => {
+      const createPacienteDto = {
+        nome: 'João Silva',
+        email: 'joao@email.com',
+        data_nascimento: new Date('1990-01-01'),
+        telefone: '(11) 99999-9999',
+        endereco: 'Rua A, 123',
+        documento_cpf: '123.456.789-00',
+        sexo: Sexo.Masculino,
+      };
+
+      const mockPaciente = new Paciente(createPacienteDto);
+
+      mockRepository.create.mockReturnValue(mockPaciente);
+      mockRepository.save.mockResolvedValue(mockPaciente);
+
+      const result = await service.create(createPacienteDto);
+
+      expect(result).toEqual(mockPaciente);
+      expect(mockRepository.create).toHaveBeenCalledWith(createPacienteDto);
+      expect(mockRepository.save).toHaveBeenCalledWith(mockPaciente);
+    });
+
+    it('should throw error when CPF already exists', async () => {
+      const createPacienteDto = {
+        nome: 'João Silva',
+        email: 'joao@email.com',
+        data_nascimento: new Date('1990-01-01'),
+        telefone: '(11) 99999-9999',
+        endereco: 'Rua A, 123',
+        documento_cpf: '123.456.789-00',
+        sexo: Sexo.Masculino,
+      };
+
+      mockRepository.save.mockRejectedValue(new Error('Duplicate entry'));
+
+      await expect(service.create(createPacienteDto)).rejects.toThrow('Duplicate entry');
+    });
+  });
+
+  describe('update', () => {
+    it('should update a patient successfully', async () => {
+      const updatePacienteDto = {
+        nome: 'João Silva Atualizado',
+        email: 'joao.novo@email.com',
+      };
+
+      const existingPaciente = new Paciente({
+        nome: 'João Silva',
+        email: 'joao@email.com',
+        data_nascimento: new Date('1990-01-01'),
+        telefone: '(11) 99999-9999',
+        endereco: 'Rua A, 123',
+        documento_cpf: '123.456.789-00',
+        sexo: Sexo.Masculino,
+      });
+
+      const updatedPaciente = { ...existingPaciente, ...updatePacienteDto };
+
+      mockRepository.findOne.mockResolvedValue(existingPaciente);
+      mockRepository.save.mockResolvedValue(updatedPaciente);
+
+      const result = await service.update('paciente-uuid', updatePacienteDto);
+
+      expect(result).toEqual(updatedPaciente);
+      expect(mockRepository.save).toHaveBeenCalledWith(updatedPaciente);
+    });
+
+    it('should throw NotFoundException when patient does not exist', async () => {
+      const updatePacienteDto = {
+        nome: 'João Silva Atualizado',
+      };
+
+      mockRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.update('non-existent-uuid', updatePacienteDto)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(mockRepository.save).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('remove', () => {
+    it('should remove a patient successfully', async () => {
+      const mockPaciente = new Paciente({
+        nome: 'João Silva',
+        email: 'joao@email.com',
+        data_nascimento: new Date('1990-01-01'),
+        telefone: '(11) 99999-9999',
+        endereco: 'Rua A, 123',
+        documento_cpf: '123.456.789-00',
+        sexo: Sexo.Masculino,
+      });
+
+      mockRepository.findOne.mockResolvedValue(mockPaciente);
+      mockRepository.remove.mockResolvedValue(mockPaciente);
+
+      await service.remove('paciente-uuid');
+
+      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 'paciente-uuid' } });
+      expect(mockRepository.remove).toHaveBeenCalledWith(mockPaciente);
+    });
+
+    it('should throw NotFoundException when patient does not exist', async () => {
+      mockRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.remove('non-existent-uuid')).rejects.toThrow(NotFoundException);
+      expect(mockRepository.remove).not.toHaveBeenCalled();
+    });
+  });
 });

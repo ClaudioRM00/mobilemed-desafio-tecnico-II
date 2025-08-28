@@ -37,12 +37,23 @@ describe('loadingInterceptor', () => {
 
   it('should hide loading on request completion', (done) => {
     const mockRequest = new HttpRequest('GET', '/api/test');
-    const mockHandler: HttpHandlerFn = () => of({} as HttpEvent<any>);
+    const mockHandler: HttpHandlerFn = () => {
+      // Criar um observable que resolve após um delay
+      return new Observable(observer => {
+        setTimeout(() => {
+          observer.next({} as HttpEvent<any>);
+          observer.complete();
+        }, 10);
+      });
+    };
 
     interceptor(mockRequest, mockHandler).subscribe({
       next: () => {
-        expect(loadingService.decrement).toHaveBeenCalled();
-        done();
+        // Aguardar um pouco mais para garantir que finalize foi chamado
+        setTimeout(() => {
+          expect(loadingService.decrement).toHaveBeenCalled();
+          done();
+        }, 20);
       },
       error: done.fail
     });
@@ -51,14 +62,22 @@ describe('loadingInterceptor', () => {
   it('should hide loading on request error', (done) => {
     const mockRequest = new HttpRequest('GET', '/api/test');
     const mockHandler: HttpHandlerFn = () => {
-      throw new Error('Network error');
+      // Criar um observable que falha após um delay
+      return new Observable(observer => {
+        setTimeout(() => {
+          observer.error(new Error('Network error'));
+        }, 10);
+      });
     };
 
     interceptor(mockRequest, mockHandler).subscribe({
       next: () => done.fail('Should have errored'),
       error: () => {
-        expect(loadingService.decrement).toHaveBeenCalled();
-        done();
+        // Aguardar um pouco mais para garantir que finalize foi chamado
+        setTimeout(() => {
+          expect(loadingService.decrement).toHaveBeenCalled();
+          done();
+        }, 20);
       }
     });
   });

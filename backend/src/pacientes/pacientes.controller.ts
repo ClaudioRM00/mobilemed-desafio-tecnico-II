@@ -7,6 +7,7 @@ import {
   Put,
   Param,
   Query,
+  Delete,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -106,5 +107,20 @@ export class PacientesController {
       id,
       updatePacienteDto as Record<string, unknown>,
     );
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Remover um paciente' })
+  @ApiParam({ name: 'id', description: 'ID do paciente' })
+  @ApiResponse({
+    status: 200,
+    description: 'Paciente removido com sucesso',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Paciente não encontrado',
+  })
+  remove(@Param('id') id: string) {
+    return this.pacientesService.remove(id);
   }
 }

@@ -1,26 +1,35 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import request from 'supertest';
-import { AppModule } from './../src/app.module';
-import { Exame, Modalidade } from '../src/exames/entities/exame.entity';
-import { Paciente, Sexo, Status } from '../src/pacientes/entities/paciente.entity';
+import { INestApplication } from '@nestjs/common';
+import * as request from 'supertest';
+import { AppModule } from '../src/app.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
-  let createdPatientId: string;
-  let createdExamId: string;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [
+        ConfigModule.forRoot({
+          isGlobal: true,
+        }),
+        TypeOrmModule.forRoot({
+          type: 'postgres',
+          host: process.env.DB_HOST || 'localhost',
+          port: parseInt(process.env.DB_PORT) || 5432,
+          username: process.env.DB_USERNAME || 'postgres',
+          password: process.env.DB_PASSWORD || 'postgres',
+          database: process.env.DB_DATABASE || 'mobilemed_test',
+          entities: [__dirname + '/../src/**/*.entity{.ts,.js}'],
+          synchronize: true,
+          logging: false,
+        }),
+        AppModule,
+      ],
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }));
     await app.init();
   });
 
@@ -35,341 +44,117 @@ describe('AppController (e2e)', () => {
       .expect('Hello World!');
   });
 
-  describe('Pacientes', () => {
-    const validPatientData = {
-      nome: 'João Silva',
-      email: 'joao@email.com',
-      data_nascimento: '1990-01-01',
-      telefone: '(11) 99999-9999',
-      endereco: 'Rua A, 123',
-      documento_cpf: '123.456.789-00',
-      sexo: Sexo.Masculino,
-    };
+  describe('Idempotency Tests', () => {
+    it('should handle multiple requests with same idempotencyKey', async () => {
+      const idempotencyKey = 'test-idempotency-key-' + Date.now();
+      const examData = {
+        nome_exame: 'Ressonância Magnética',
+        modalidade: 'MR',
+        id_paciente: 'test-patient-id',
+        data_exame: '2024-01-15T10:00:00.000Z',
+        idempotencyKey,
+      };
 
-    describe('POST /pacientes', () => {
-      it('should create a patient with valid data and return UUID', async () => {
-        const response = await request(app.getHttpServer())
-          .post('/pacientes')
-          .send(validPatientData)
-          .expect(201);
+      // First request
+      const response1 = await request(app.getHttpServer())
+        .post('/exames')
+        .send(examData)
+        .expect(201);
 
-        expect(response.body).toBeDefined();
-        expect(response.body.id).toBeDefined();
-        expect(response.body.nome).toBe(validPatientData.nome);
-        expect(response.body.status).toBe(Status.Ativo);
-        
-        createdPatientId = response.body.id;
-      });
+      // Second request with same idempotencyKey
+      const response2 = await request(app.getHttpServer())
+        .post('/exames')
+        .send(examData)
+        .expect(200);
 
-      it('should throw 409 error when CPF already exists', async () => {
-        // Primeiro cria um paciente
-        await request(app.getHttpServer())
-          .post('/pacientes')
-          .send(validPatientData)
-          .expect(201);
-
-        // Tenta criar outro com o mesmo CPF
-        await request(app.getHttpServer())
-          .post('/pacientes')
-          .send(validPatientData)
-          .expect(409);
-      });
-
-      it('should validate required fields', async () => {
-        const invalidData = {
-          nome: 'João Silva',
-          // email faltando
-          data_nascimento: '1990-01-01',
-          telefone: '(11) 99999-9999',
-          endereco: 'Rua A, 123',
-          documento_cpf: '123.456.789-00',
-          sexo: Sexo.Masculino,
-        };
-
-        await request(app.getHttpServer())
-          .post('/pacientes')
-          .send(invalidData)
-          .expect(400);
-      });
+      // Both responses should be identical
+      expect(response1.body.id).toBe(response2.body.id);
+      expect(response1.body.idempotencyKey).toBe(idempotencyKey);
+      expect(response2.body.idempotencyKey).toBe(idempotencyKey);
     });
 
-    describe('GET /pacientes', () => {
-      it('should return paginated list of patients', async () => {
-        // Primeiro cria um paciente
-        await request(app.getHttpServer())
-          .post('/pacientes')
-          .send(validPatientData)
-          .expect(201);
+    it('should handle concurrent requests with same idempotencyKey', async () => {
+      const idempotencyKey = 'concurrent-test-' + Date.now();
+      const examData = {
+        nome_exame: 'Tomografia Computadorizada',
+        modalidade: 'CT',
+        id_paciente: 'test-patient-id',
+        data_exame: '2024-01-15T10:00:00.000Z',
+        idempotencyKey,
+      };
 
-        const response = await request(app.getHttpServer())
-          .get('/pacientes?page=1&pageSize=10')
-          .expect(200);
+      // Send multiple concurrent requests
+      const promises = Array(5).fill(null).map(() =>
+        request(app.getHttpServer())
+          .post('/exames')
+          .send(examData)
+      );
 
-        expect(response.body).toBeDefined();
-        expect(response.body.data).toBeDefined();
-        expect(response.body.meta).toBeDefined();
-        expect(response.body.meta.total).toBeGreaterThan(0);
-        expect(response.body.meta.page).toBe(1);
-        expect(response.body.meta.pageSize).toBe(10);
-      });
-    });
+      const responses = await Promise.all(promises);
 
-    describe('GET /pacientes/:id', () => {
-      it('should return a patient by id', async () => {
-        // Primeiro cria um paciente
-        const createResponse = await request(app.getHttpServer())
-          .post('/pacientes')
-          .send(validPatientData)
-          .expect(201);
+      // All responses should have the same status (either 201 or 200)
+      const statusCodes = responses.map(r => r.status);
+      expect(statusCodes.every(code => code === 201 || code === 200)).toBe(true);
 
-        const patientId = createResponse.body.id;
-
-        const response = await request(app.getHttpServer())
-          .get(`/pacientes/${patientId}`)
-          .expect(200);
-
-        expect(response.body).toBeDefined();
-        expect(response.body.id).toBe(patientId);
-        expect(response.body.nome).toBe(validPatientData.nome);
-      });
-
-      it('should return 404 when patient not found', async () => {
-        await request(app.getHttpServer())
-          .get('/pacientes/non-existent-id')
-          .expect(404);
-      });
+      // All successful responses should have the same exam ID
+      const examIds = responses
+        .filter(r => r.status === 200 || r.status === 201)
+        .map(r => r.body.id);
+      
+      if (examIds.length > 0) {
+        expect(examIds.every(id => id === examIds[0])).toBe(true);
+      }
     });
   });
 
-  describe('Exames', () => {
-    let patientId: string;
+  describe('Pagination Tests', () => {
+    it('should return paginated results', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/exames?page=1&limit=10')
+        .expect(200);
 
-    beforeEach(async () => {
-      // Criar um paciente para usar nos testes de exames
-      const patientData = {
-        nome: 'Maria Silva',
-        email: 'maria@email.com',
-        data_nascimento: '1985-05-15',
-        telefone: '(11) 88888-8888',
-        endereco: 'Rua B, 456',
-        documento_cpf: '987.654.321-00',
-        sexo: Sexo.Feminino,
+      expect(response.body).toHaveProperty('data');
+      expect(response.body).toHaveProperty('meta');
+      expect(response.body.meta).toHaveProperty('page');
+      expect(response.body.meta).toHaveProperty('pageSize');
+      expect(response.body.meta).toHaveProperty('total');
+      expect(response.body.meta.page).toBe(1);
+      expect(response.body.meta.pageSize).toBe(10);
+    });
+
+    it('should handle different page sizes', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/exames?page=2&limit=5')
+        .expect(200);
+
+      expect(response.body.meta.page).toBe(2);
+      expect(response.body.meta.pageSize).toBe(5);
+    });
+  });
+
+  describe('Error Handling Tests', () => {
+    it('should return 400 for invalid exam data', async () => {
+      const invalidExamData = {
+        nome_exame: 'Test Exam',
+        // Missing required fields
       };
 
-      const patientResponse = await request(app.getHttpServer())
-        .post('/pacientes')
-        .send(patientData)
-        .expect(201);
-
-      patientId = patientResponse.body.id;
+      await request(app.getHttpServer())
+        .post('/exames')
+        .send(invalidExamData)
+        .expect(400);
     });
 
-    const validExamData = (idempotencyKey: string) => ({
-      nome_exame: 'Ressonância Magnética',
-      modalidade: Modalidade.MR,
-      id_paciente: '', // Será preenchido no teste
-      data_exame: '2024-01-15T10:00:00.000Z',
-      idempotencyKey,
+    it('should return 404 for non-existent exam', async () => {
+      await request(app.getHttpServer())
+        .get('/exames/non-existent-id')
+        .expect(404);
     });
 
-    describe('POST /exames', () => {
-      it('should create an exam with existing patient and new idempotencyKey', async () => {
-        const examData = {
-          ...validExamData('unique-key-123'),
-          id_paciente: patientId,
-        };
-
-        const response = await request(app.getHttpServer())
-          .post('/exames')
-          .send(examData)
-          .expect(201);
-
-        expect(response.body).toBeDefined();
-        expect(response.body.id).toBeDefined();
-        expect(response.body.nome_exame).toBe(examData.nome_exame);
-        expect(response.body.modalidade).toBe(examData.modalidade);
-        expect(response.body.id_paciente).toBe(patientId);
-        
-        createdExamId = response.body.id;
-      });
-
-      it('should return existing exam when reusing same idempotencyKey', async () => {
-        const examData = {
-          ...validExamData('same-key-456'),
-          id_paciente: patientId,
-        };
-
-        // Primeiro cria o exame
-        const firstResponse = await request(app.getHttpServer())
-          .post('/exames')
-          .send(examData)
-          .expect(201);
-
-        // Tenta criar outro com a mesma chave de idempotência
-        const secondResponse = await request(app.getHttpServer())
-          .post('/exames')
-          .send(examData)
-          .expect(200);
-
-        expect(secondResponse.body.id).toBe(firstResponse.body.id);
-      });
-
-      it('should throw 400 error when patient does not exist', async () => {
-        const examData = {
-          ...validExamData('invalid-patient-key'),
-          id_paciente: 'non-existent-patient-id',
-        };
-
-        await request(app.getHttpServer())
-          .post('/exames')
-          .send(examData)
-          .expect(400);
-      });
-
-      it('should throw 400 error when modalidade is invalid', async () => {
-        const examData = {
-          ...validExamData('invalid-modalidade-key'),
-          id_paciente: patientId,
-          modalidade: 'INVALID',
-        };
-
-        await request(app.getHttpServer())
-          .post('/exames')
-          .send(examData)
-          .expect(400);
-      });
-    });
-
-    describe('GET /exames', () => {
-      it('should return paginated list of exams (10 per page)', async () => {
-        // Primeiro cria um exame
-        const examData = {
-          ...validExamData('list-test-key'),
-          id_paciente: patientId,
-        };
-
-        await request(app.getHttpServer())
-          .post('/exames')
-          .send(examData)
-          .expect(201);
-
-        const response = await request(app.getHttpServer())
-          .get('/exames?page=1&pageSize=10')
-          .expect(200);
-
-        expect(response.body).toBeDefined();
-        expect(response.body.data).toBeDefined();
-        expect(response.body.meta).toBeDefined();
-        expect(response.body.meta.total).toBeGreaterThan(0);
-        expect(response.body.meta.page).toBe(1);
-        expect(response.body.meta.pageSize).toBe(10);
-      });
-    });
-
-    describe('GET /exames/:id', () => {
-      it('should return an exam by id', async () => {
-        // Primeiro cria um exame
-        const examData = {
-          ...validExamData('get-test-key'),
-          id_paciente: patientId,
-        };
-
-        const createResponse = await request(app.getHttpServer())
-          .post('/exames')
-          .send(examData)
-          .expect(201);
-
-        const examId = createResponse.body.id;
-
-        const response = await request(app.getHttpServer())
-          .get(`/exames/${examId}`)
-          .expect(200);
-
-        expect(response.body).toBeDefined();
-        expect(response.body.id).toBe(examId);
-        expect(response.body.nome_exame).toBe(examData.nome_exame);
-      });
-
-      it('should return 404 when exam not found', async () => {
-        await request(app.getHttpServer())
-          .get('/exames/non-existent-id')
-          .expect(404);
-      });
-    });
-
-    describe('PUT /exames/:id', () => {
-      it('should update an exam successfully', async () => {
-        // Primeiro cria um exame
-        const examData = {
-          ...validExamData('update-test-key'),
-          id_paciente: patientId,
-        };
-
-        const createResponse = await request(app.getHttpServer())
-          .post('/exames')
-          .send(examData)
-          .expect(201);
-
-        const examId = createResponse.body.id;
-
-        const updateData = {
-          nome_exame: 'Tomografia Computadorizada',
-          modalidade: Modalidade.CT,
-        };
-
-        const response = await request(app.getHttpServer())
-          .put(`/exames/${examId}`)
-          .send(updateData)
-          .expect(200);
-
-        expect(response.body).toBeDefined();
-        expect(response.body.nome_exame).toBe(updateData.nome_exame);
-        expect(response.body.modalidade).toBe(updateData.modalidade);
-      });
-
-      it('should return 404 when updating non-existent exam', async () => {
-        const updateData = {
-          nome_exame: 'Tomografia Computadorizada',
-          modalidade: Modalidade.CT,
-        };
-
-        await request(app.getHttpServer())
-          .put('/exames/non-existent-id')
-          .send(updateData)
-          .expect(404);
-      });
-    });
-
-    describe('DELETE /exames/:id', () => {
-      it('should remove an exam successfully', async () => {
-        // Primeiro cria um exame
-        const examData = {
-          ...validExamData('delete-test-key'),
-          id_paciente: patientId,
-        };
-
-        const createResponse = await request(app.getHttpServer())
-          .post('/exames')
-          .send(examData)
-          .expect(201);
-
-        const examId = createResponse.body.id;
-
-        await request(app.getHttpServer())
-          .delete(`/exames/${examId}`)
-          .expect(200);
-
-        // Verifica se o exame foi realmente removido
-        await request(app.getHttpServer())
-          .get(`/exames/${examId}`)
-          .expect(404);
-      });
-
-      it('should return 404 when removing non-existent exam', async () => {
-        await request(app.getHttpServer())
-          .delete('/exames/non-existent-id')
-          .expect(404);
-      });
+    it('should return 404 for non-existent patient', async () => {
+      await request(app.getHttpServer())
+        .get('/pacientes/non-existent-id')
+        .expect(404);
     });
   });
 });

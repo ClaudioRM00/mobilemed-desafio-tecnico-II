@@ -1,3 +1,4 @@
+
 # Guia de Solução de Problemas - Frontend Angular
 
 ## Problemas Comuns e Soluções

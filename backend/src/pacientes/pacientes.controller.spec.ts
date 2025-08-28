@@ -264,4 +264,22 @@ describe('PacientesController', () => {
       ).rejects.toThrow();
     });
   });
+
+  describe('remove', () => {
+    it('should remove a patient successfully', async () => {
+      mockPacientesService.remove.mockResolvedValue(undefined);
+
+      await controller.remove('test-id');
+
+      expect(mockPacientesService.remove).toHaveBeenCalledWith('test-id');
+    });
+
+    it('should throw NotFoundException when removing non-existent patient', async () => {
+      mockPacientesService.remove.mockRejectedValue(
+        new NotFoundException('Paciente não encontrado'),
+      );
+
+      await expect(controller.remove('non-existent-id')).rejects.toThrow(NotFoundException);
+    });
+  });
 });

@@ -82,6 +82,21 @@ export class ExamesController {
     return this.examesService.findOne(id);
   }
 
+  @Get('patient/:patientId')
+  @ApiOperation({ summary: 'Buscar exames por ID do paciente' })
+  @ApiParam({ name: 'patientId', description: 'ID do paciente' })
+  @ApiResponse({
+    status: 200,
+    description: 'Exames do paciente encontrados com sucesso',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Paciente não encontrado',
+  })
+  findByPatientId(@Param('patientId') patientId: string) {
+    return this.examesService.findByPatientId(patientId);
+  }
+
   @Put(':id')
   @ApiOperation({ summary: 'Atualizar um exame' })
   @ApiParam({ name: 'id', description: 'ID do exame' })
