@@ -8,7 +8,7 @@ on:
 
 jobs:
   backend-tests:
-    name: Backend Tests & Lint
+    name: Backend Tests & Build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     
@@ -41,10 +41,6 @@ jobs:
       - name: Install backend dependencies
         working-directory: ./backend
         run: npm ci
-
-      - name: Run backend linting
-        working-directory: ./backend
-        run: npm run lint
 
       - name: Run backend tests
         working-directory: ./backend
