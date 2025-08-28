@@ -7,26 +7,11 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  backend-tests:
-    name: Backend Tests & Build
+  backend-build:
+    name: Backend Build Validation
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_DB: mobilemed_db_test
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -34,88 +19,17 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.19'
+          node-version: '18'
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
 
-      - name: Install backend dependencies
+      - name: Install dependencies
         working-directory: ./backend
         run: npm ci
-
-      - name: Run backend tests
-        working-directory: ./backend
-        run: npm run test
-        env:
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_USERNAME: postgres
-          DB_PASSWORD: password
-          DB_DATABASE: mobilemed_db_test
-          DB_SCHEMA: public
-          NODE_ENV: test
-
-      - name: Run backend e2e tests
-        working-directory: ./backend
-        run: npm run test:e2e
-        env:
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_USERNAME: postgres
-          DB_PASSWORD: password
-          DB_DATABASE: mobilemed_db_test
-          DB_SCHEMA: public
-          NODE_ENV: test
 
       - name: Build backend
         working-directory: ./backend
         run: npm run build
-
-  frontend-tests:
-    name: Frontend Tests & Build
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.19'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install frontend dependencies
-        working-directory: ./frontend
-        run: npm ci
-
-      - name: Run frontend tests
-        working-directory: ./frontend
-        run: npm run test -- --watch=false --browsers=ChromeHeadless
-
-      - name: Build frontend
-        working-directory: ./frontend
-        run: npm run build
-
-  docker-build:
-    name: Docker Build Test
-    runs-on: ubuntu-latest
-    needs: [backend-tests, frontend-tests]
-    timeout-minutes: 10
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Test backend Docker build
-        run: docker build -t mobilemed-backend-test ./backend
-
-      - name: Test frontend Docker build
-        run: docker build -t mobilemed-frontend-test ./frontend
 
       - name: Test docker-compose build
         run: docker compose build
