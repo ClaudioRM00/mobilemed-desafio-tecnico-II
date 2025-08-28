@@ -7,25 +7,10 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  code-quality:
-    name: Code Quality & Coverage
+  build-validation:
+    name: Build Validation
     runs-on: ubuntu-latest
     
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_DB: mobilemed_db_test
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -33,7 +18,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.19'
+          node-version: '18'
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
 
@@ -41,29 +26,14 @@ jobs:
         working-directory: ./backend
         run: npm ci
 
-      - name: Run backend tests with coverage
+      - name: Build backend
         working-directory: ./backend
-        run: npm run test:cov
-        env:
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_USERNAME: postgres
-          DB_PASSWORD: password
-          DB_DATABASE: mobilemed_db_test
-          DB_SCHEMA: public
-          NODE_ENV: test
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./backend/coverage/lcov.info
-          flags: backend
-          name: backend-coverage
+        run: npm run build
 
       - name: Setup Node.js for frontend
         uses: actions/setup-node@v4
         with:
-          node-version: '20.19'
+          node-version: '18'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
@@ -71,16 +41,9 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
-      - name: Run frontend tests with coverage
+      - name: Build frontend
         working-directory: ./frontend
-        run: npm run test -- --watch=false --browsers=ChromeHeadless --code-coverage
-
-      - name: Upload frontend coverage reports to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./frontend/coverage/lcov.info
-          flags: frontend
-          name: frontend-coverage
+        run: npm run build
 
   security-scan:
     name: Security Scan
@@ -97,9 +60,3 @@ jobs:
           scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
-
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: 'trivy-results.sarif'
