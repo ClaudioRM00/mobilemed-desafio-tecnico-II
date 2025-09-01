@@ -13,6 +13,13 @@ export interface ExameDto {
   idempotencyKey: string;
 }
 
+export interface CreateExameDto {
+  nome_exame: string;
+  modalidade: Modalidade;
+  id_paciente: string;
+  data_exame: string;
+}
+
 export interface PaginatedResponse<T> {
   data: T[];
   meta: {
@@ -35,7 +42,7 @@ export class ExamesService {
     return this.http.get<PaginatedResponse<ExameDto>>(this.baseUrl, { params });
   }
 
-  create(dto: ExameDto): Observable<ExameDto> {
+  create(dto: CreateExameDto): Observable<ExameDto> {
     return this.http.post<ExameDto>(this.baseUrl, dto);
   }
 

@@ -7,11 +7,8 @@ import { ToastComponent } from './shared/toast/toast.component';
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet, LoadingSpinnerComponent, ToastComponent],
-  template: `
-    <app-loading-spinner></app-loading-spinner>
-    <app-toast></app-toast>
-    <router-outlet></router-outlet>
-  `
+  templateUrl: './app.html',
+  styleUrls: ['./app.scss']
 })
 export class AppComponent {
   title = 'mobilemed-frontend';

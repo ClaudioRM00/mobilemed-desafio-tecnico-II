@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
-import { ExamesService, ExameDto } from '../../../services/exames';
+import { ExamesService, ExameDto, CreateExameDto } from '../../../services/exames';
 import { PacientesService, PacienteDto } from '../../../services/pacientes';
 import { MODALIDADES_LIST, getModalidadeLabel as getModalidadeLabelUtil, Modalidade } from '../../../shared/utils/modalidade.utils';
 import { NotificationService } from '../../../core/notification.service';
@@ -49,7 +49,6 @@ export class ExameForm implements OnInit, OnDestroy {
       modalidade: ['', [Validators.required]],
       id_paciente: ['', [Validators.required]],
       data_exame: ['', [Validators.required]],
-      idempotencyKey: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(255)]],
       pacienteSearch: [''], // Campo para busca
     });
   }
@@ -72,8 +71,7 @@ export class ExameForm implements OnInit, OnDestroy {
           this.exameId = id;
           this.loadExame(id);
         } else {
-          // Gerar chave de idempotência automaticamente para novos exames
-          this.gerarChave();
+          // Para novos exames, a chave de idempotência será gerada automaticamente no envio
         }
       });
 
@@ -112,8 +110,7 @@ export class ExameForm implements OnInit, OnDestroy {
             nome_exame: exame.nome_exame,
             modalidade: exame.modalidade,
             id_paciente: exame.id_paciente,
-            data_exame: dataExame,
-            idempotencyKey: exame.idempotencyKey
+            data_exame: dataExame
           });
           
           // Carregar dados do paciente se existir ID
@@ -147,11 +144,7 @@ export class ExameForm implements OnInit, OnDestroy {
       });
   }
 
-  gerarChave() {
-    const base = this.form.get('nome_exame')?.value || 'exame';
-    const key = `${base}-${Date.now()}`.replace(/\s+/g, '-').toLowerCase();
-    this.form.patchValue({ idempotencyKey: key });
-  }
+  // Método removido - a chave de idempotência é gerada automaticamente no envio
 
   onSubmit() {
     this.formSubmitted = true;
@@ -183,7 +176,7 @@ export class ExameForm implements OnInit, OnDestroy {
       }
     }
     
-    const exameData: ExameDto = {
+    const exameData: CreateExameDto = {
       ...formData,
       data_exame: dataExame
     };

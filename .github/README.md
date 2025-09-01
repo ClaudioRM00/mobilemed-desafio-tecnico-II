@@ -29,15 +29,16 @@ Solução full-stack composta por um **backend NestJS** e um **frontend Angular*
 mobilemed-desafio-tecnico-II/
 ├── backend/            # Serviço NestJS (API, regras de negócio, banco)
 │   ├── src/
-│   │   ├── pacientes/      # Pacientes (controllers, services, use-cases, entities)
-│   │   ├── exames/         # Exames (controllers, services, use-cases, entities)
+│   │   ├── modules/        # Módulos de negócio organizados por domínio
+│   │   │   ├── pacientes/      # Pacientes (controllers, services, use-cases, entities, dto, interfaces)
+│   │   │   └── exames/         # Exames (controllers, services, use-cases, entities, dto, interfaces)
 │   │   ├── common/         # Módulos compartilhados (paginação, transações, DTOs)
+│   │   │   ├── dto/            # DTOs genéricos (PaginatedResponseDto, PaginationDto)
+│   │   │   └── services/       # Serviços compartilhados (TransactionService)
 │   │   ├── config/         # Configurações (database.config.ts)
+│   │   ├── database/       # Migrações e seeds
 │   │   ├── app.module.ts   # Módulo raiz
 │   │   └── main.ts         # Bootstrap da aplicação
-│   ├── database/
-│   │   ├── migrations/     # Migrações TypeORM versionadas
-│   │   └── seeds/          # Script de seed inicial (pacientes de exemplo)
 │   └── env.example         # Variáveis de ambiente padrão
 ├── frontend/           # Aplicação Angular (SPA)
 │   └── src/
@@ -157,6 +158,7 @@ $ docker compose -f ../docker-compose.yml up db -d
 $ npm run start:dev
 ```
 
+
 API disponível em `http://localhost:3000`. Documentação Swagger em `/swagger` quando em modo dev. Health check em `/health`.
 
 ### Rodando Testes do Backend
@@ -178,10 +180,15 @@ $ npm run test:e2e
 
 * **Arquitetura Hexagonal / Clean** – Controllers → Use-Cases → Entidades de Domínio. Lógica de negócio isolada de detalhes NestJS.
 * **Serviço Transacional** – `common/services/transaction.service.ts` garante operações ACID entre use-cases.
+
 * **Validação & Transformação de DTOs** – Uso de `class-validator` & `class-transformer` para contratos confiáveis.
+
 * **Soft Delete (parcial)** – A entidade `Paciente` já possui o campo `status` (`Ativo`/`Inativo`) atuando como exclusão lógica; 
+
 * **Abstração de Paginação** – DTO genérico & wrappers para respostas consistentes.
+
 * **Enum Modalidade DICOM** – Enum `Modalidade` contempla os 11 tipos requeridos (CR, CT, DX, MG, MR, NM, OT, PT, RF, US, XA) com validação em DTO.
+
 * **Idempotência de Exames** – Chave `idempotencyKey` única + índice composto garante que requisições repetidas retornem o mesmo registro.
 
 ---
@@ -225,6 +232,18 @@ $ npm run test -- --code-coverage
 
 ---
 
+## 🗄️ Acesso ao Banco de Dados
+
+### Via PgAdmin (Interface Web)
+1. Acesse: http://localhost:8080
+2. **Login**: admin@mobilemed.com / admin123
+3. **Configurar conexão**:
+   - Host: `postgres`
+   - Port: `5432`
+   - Database: `mobilemed_db`
+   - Username: `postgres`
+   - Password: `password`
+
 ## Fluxo Dockerizado
 
 O `docker-compose.yml` na raiz orquestra todo o ambiente para desenvolvimento e pipelines CI.
@@ -241,11 +260,11 @@ Serviço | Imagem | Portas | Finalidade
 
 * **Rebuild após mudar dependências**
   ```bash
-  docker compose build --no-cache api web
+  docker compose build --no-cache backend frontend
   ```
 * **Rodar migrações manualmente**
   ```bash
-  docker compose exec api npm run typeorm migration:run
+  docker compose exec backend npm run typeorm migration:run
   ```
 * **Inspecionar o DB**
   ```bash

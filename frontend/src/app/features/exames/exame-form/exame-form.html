@@ -211,41 +211,7 @@
         </div>
       </div>
 
-      <!-- Idempotency Key -->
-      <div>
-        <h4 class="text-sm font-medium text-medical-900 mb-4">Chave de Idempotência</h4>
-        <div>
-          <label class="block text-sm font-medium text-medical-700 mb-2">
-            Chave de Idempotência *
-          </label>
-          <div class="flex gap-2">
-            <input
-              type="text"
-              formControlName="idempotencyKey"
-              class="input-field flex-1"
-              placeholder="Chave única para evitar duplicação"
-            />
-            <button
-              type="button"
-              (click)="gerarChave()"
-              class="btn-secondary whitespace-nowrap"
-            >
-              Gerar Chave
-            </button>
-          </div>
-          <div
-            *ngIf="form.get('idempotencyKey')?.invalid && formSubmitted"
-            class="mt-1 text-sm text-danger-600"
-          >
-            <span *ngIf="form.get('idempotencyKey')?.errors?.['required']">Chave de idempotência é obrigatória</span>
-            <span *ngIf="form.get('idempotencyKey')?.errors?.['minlength']">Chave deve ter pelo menos 10 caracteres</span>
-            <span *ngIf="form.get('idempotencyKey')?.errors?.['maxlength']">Chave deve ter no máximo 255 caracteres</span>
-          </div>
-          <p class="mt-2 text-sm text-medical-600">
-            A chave de idempotência garante que o mesmo exame não seja cadastrado múltiplas vezes.
-          </p>
-        </div>
-      </div>
+
 
              <!-- Validation Error Message -->
        <div
