@@ -1,0 +1,90 @@
+// Dashboard Component Styles
+// Component-specific styles for the dashboard page
+
+// Custom shadow utility for cards
+.shadow-card {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+// Stats cards styling
+.stats-card {
+  transition: all 0.2s ease-in-out;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+}
+
+// Quick action cards
+.quick-action-card {
+  transition: all 0.2s ease-in-out;
+  
+  &:hover {
+    transform: translateY(-1px);
+    border-color: var(--primary-500);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+}
+
+// Icon containers
+.icon-container {
+  transition: all 0.2s ease-in-out;
+  
+  &.primary {
+    background-color: var(--primary-500);
+    
+    &:hover {
+      background-color: var(--primary-600);
+    }
+  }
+  
+  &.success {
+    background-color: var(--success-500);
+    
+    &:hover {
+      background-color: var(--success-600);
+    }
+  }
+}
+
+// Loading states
+.loading-text {
+  color: var(--medical-400);
+  font-style: italic;
+}
+
+// Responsive adjustments
+@media (max-width: 640px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+// Animation for stats loading
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.loading-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

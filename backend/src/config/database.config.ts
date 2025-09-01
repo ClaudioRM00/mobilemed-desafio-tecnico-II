@@ -1,6 +1,6 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { Paciente } from '../pacientes/entities/paciente.entity';
-import { Exame } from '../exames/entities/exame.entity';
+import { Paciente } from '../modules/pacientes/entities/paciente.entity';
+import { Exame } from '../modules/exames/entities/exame.entity';
 
 export const databaseConfig: TypeOrmModuleOptions = {
   type: 'postgres',
