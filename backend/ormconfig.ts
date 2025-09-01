@@ -1,7 +1,7 @@
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
-import { Paciente } from './src/pacientes/entities/paciente.entity';
-import { Exame } from './src/exames/entities/exame.entity';
+import { Paciente } from './src/modules/pacientes/entities/paciente.entity';
+import { Exame } from './src/modules/exames/entities/exame.entity';
 
 config();
 
@@ -16,7 +16,7 @@ export default new DataSource({
   database: process.env.DB_DATABASE || 'mobilemed_db',
   schema: process.env.DB_SCHEMA || 'public',
   entities: [Paciente, Exame],
-  migrations: isDev ? ['src/database/migrations/*.ts'] : ['dist/database/migrations/*.js'],
+  migrations: ['src/database/migrations/*.ts'],
   migrationsTableName: 'migrations',
   synchronize: true, // Enable synchronize for development
   logging: isDev,

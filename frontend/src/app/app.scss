@@ -1,0 +1,21 @@
+// App Component Styles
+// Global styles for the root component
+
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+// Ensure proper stacking context for modals and overlays
+app-loading-spinner {
+  z-index: 9999;
+}
+
+app-toast {
+  z-index: 9998;
+}
+
+// Global layout styles
+.router-outlet-container {
+  min-height: calc(100vh - 64px); // Adjust based on your header height
+}

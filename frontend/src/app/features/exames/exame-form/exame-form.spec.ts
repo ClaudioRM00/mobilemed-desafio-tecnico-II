@@ -20,7 +20,7 @@ describe('ExameForm', () => {
     modalidade: 'MR' as Modalidade,
     id_paciente: 'patient-id',
     data_exame: '2024-01-15T10:00:00.000Z',
-    idempotencyKey: 'test-key-123',
+    idempotencyKey: 'test-key-123'
   };
 
   const mockPaciente = {
@@ -71,7 +71,6 @@ describe('ExameForm', () => {
     expect(component.form.get('modalidade')?.value).toBe('');
     expect(component.form.get('id_paciente')?.value).toBe('');
     expect(component.form.get('data_exame')?.value).toBe('');
-    expect(component.form.get('idempotencyKey')?.value).toBe('');
   });
 
   it('should validate required fields', () => {
@@ -82,7 +81,6 @@ describe('ExameForm', () => {
     expect(form.get('modalidade')?.errors?.['required']).toBeTruthy();
     expect(form.get('id_paciente')?.errors?.['required']).toBeTruthy();
     expect(form.get('data_exame')?.errors?.['required']).toBeTruthy();
-    expect(form.get('idempotencyKey')?.errors?.['required']).toBeTruthy();
   });
 
   it('should validate nome_exame minimum length', () => {
@@ -103,26 +101,26 @@ describe('ExameForm', () => {
     expect(nomeExameControl?.errors?.['maxlength']).toBeTruthy();
   });
 
-  it('should validate idempotencyKey minimum length', () => {
-    const idempotencyKeyControl = component.form.get('idempotencyKey');
-    idempotencyKeyControl?.setValue('short');
-    
-    expect(idempotencyKeyControl?.errors?.['minlength']).toBeTruthy();
-    
-    idempotencyKeyControl?.setValue('valid-key-with-sufficient-length');
-    expect(idempotencyKeyControl?.errors).toBeNull();
-  });
 
-  it('should generate idempotency key', () => {
+
+  it('should submit form data without idempotency key', () => {
     component.form.patchValue({
-      nome_exame: 'Test Exam'
+      nome_exame: 'Test Exam',
+      modalidade: 'MR' as Modalidade,
+      id_paciente: 'patient-id',
+      data_exame: '2024-01-15T10:00'
     });
     
-    component.gerarChave();
+    // Mock do serviço para capturar os dados enviados
+    examesService.create.and.returnValue(of(mockExame));
     
-    const generatedKey = component.form.get('idempotencyKey')?.value;
-    expect(generatedKey).toContain('test-exam');
-    expect(generatedKey).toMatch(/test-exam-\d+/);
+    component.onSubmit();
+    
+    // Verificar se o serviço foi chamado
+    expect(examesService.create).toHaveBeenCalled();
+    const callArgs = examesService.create.calls.mostRecent().args[0];
+    // Verificar que a chave de idempotência não foi enviada pelo frontend
+    expect(callArgs.hasOwnProperty('idempotencyKey')).toBeFalse();
   });
 
   it('should load exam data in edit mode', () => {
@@ -138,6 +136,7 @@ describe('ExameForm', () => {
     expect(component.form.get('nome_exame')?.value).toBe(mockExame.nome_exame);
     expect(component.form.get('modalidade')?.value).toBe(mockExame.modalidade);
     expect(component.form.get('id_paciente')?.value).toBe(mockExame.id_paciente);
+    expect(component.form.get('data_exame')?.value).toBe('2024-01-15T10:00:00');
   });
 
   it('should handle exam loading error', () => {
@@ -157,8 +156,7 @@ describe('ExameForm', () => {
       nome_exame: 'Test Exam',
       modalidade: 'MR' as Modalidade,
       id_paciente: 'patient-id',
-      data_exame: '2024-01-15T10:00',
-      idempotencyKey: 'test-key-123',
+      data_exame: '2024-01-15T10:00'
     });
 
     component.onSubmit();
@@ -176,8 +174,7 @@ describe('ExameForm', () => {
       nome_exame: 'Updated Exam',
       modalidade: 'CT' as Modalidade,
       id_paciente: 'patient-id',
-      data_exame: '2024-01-15T10:00',
-      idempotencyKey: 'test-key-123',
+      data_exame: '2024-01-15T10:00'
     });
 
     component.onSubmit();
@@ -193,8 +190,7 @@ describe('ExameForm', () => {
       nome_exame: 'Test Exam',
       modalidade: 'MR' as Modalidade,
       id_paciente: 'patient-id',
-      data_exame: '2024-01-15T10:00',
-      idempotencyKey: 'test-key-123',
+      data_exame: '2024-01-15T10:00'
     });
 
     component.onSubmit();
@@ -226,8 +222,7 @@ describe('ExameForm', () => {
       nome_exame: 'Test Exam',
       modalidade: 'MR' as Modalidade,
       id_paciente: 'patient-id',
-      data_exame: '2024-01-15T10:00',
-      idempotencyKey: 'test-key-123',
+      data_exame: '2024-01-15T10:00'
     });
 
     component.onSubmit();
